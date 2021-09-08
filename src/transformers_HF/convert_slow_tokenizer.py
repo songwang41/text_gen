@@ -21,8 +21,8 @@
 
 from typing import Dict, List, Tuple
 
-from tokenizers import Tokenizer, decoders, normalizers, pre_tokenizers, processors
-from tokenizers.models import BPE, Unigram, WordPiece
+from tokenizers_HF import Tokenizer, decoders, normalizers, pre_tokenizers, processors
+from tokenizers_HF.models import BPE, Unigram, WordPiece
 
 from .file_utils import requires_protobuf, requires_sentencepiece
 

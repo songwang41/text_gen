@@ -73,7 +73,7 @@ if stale_egg_info.exists():
 
 # IMPORTANT:
 # 1. all dependencies should be listed here with their version requirements if any
-# 2. once modified, run: `make deps_table_update` to update src/transformers/dependency_versions_table.py
+# 2. once modified, run: `make deps_table_update` to update src/transformers_HF/dependency_versions_table.py
 _deps = [
     "black>=20.8b1",
     "cookiecutter==1.7.2",
@@ -116,7 +116,7 @@ _deps = [
     "tensorflow-cpu>=2.0",
     "tensorflow>=2.0",
     "timeout-decorator",
-    "tokenizers==0.9.4",
+    "tokenizers_HF==0.9.4",
     "torch>=1.0",
     "tqdm>=4.27",
     "unidic>=1.0.2",
@@ -125,7 +125,7 @@ _deps = [
 ]
 
 
-# tokenizers: "tokenizers==0.9.4" lookup table
+# tokenizers_HF: "tokenizers_HF==0.9.4" lookup table
 # support non-versions file too so that they can be checked at run time
 deps = {b: a for a, b in (re.findall(r"^(([^!=<>]+)(?:[!=<>].*)?$)", x)[0] for x in _deps)}
 
@@ -143,7 +143,7 @@ class DepsTableUpdateCommand(Command):
     description = "build runtime dependency table"
     user_options = [
         # format: (long option, short option, description).
-        ("dep-table-update", None, "updates src/transformers/dependency_versions_table.py"),
+        ("dep-table-update", None, "updates src/transformers_HF/dependency_versions_table.py"),
     ]
 
     def initialize_options(self):
@@ -163,7 +163,7 @@ class DepsTableUpdateCommand(Command):
             "}",
             ""
         ]
-        target = "src/transformers/dependency_versions_table.py"
+        target = "src/transformers_HF/dependency_versions_table.py"
         print(f"updating {target}")
         with open(target, "w", encoding="utf-8", newline="\n") as f:
             f.write("\n".join(content))
@@ -186,7 +186,7 @@ else:
     extras["retrieval"] = deps_list("faiss-cpu", "datasets")
     extras["flax"] = deps_list("jax", "jaxlib", "flax")
 
-extras["tokenizers"] = deps_list("tokenizers")
+extras["tokenizers_HF"] = deps_list("tokenizers_HF")
 extras["onnxruntime"] = deps_list("onnxruntime", "onnxruntime-tools")
 extras["modelcreation"] = deps_list("cookiecutter")
 
@@ -202,7 +202,7 @@ extras["testing"] = (
 extras["docs"] = deps_list("recommonmark", "sphinx", "sphinx-markdown-tables", "sphinx-rtd-theme", "sphinx-copybutton")
 extras["quality"] = deps_list("black", "isort", "flake8")
 
-extras["all"] = extras["tf"] + extras["torch"] + extras["flax"] + extras["sentencepiece"] + extras["tokenizers"]
+extras["all"] = extras["tf"] + extras["torch"] + extras["flax"] + extras["sentencepiece"] + extras["tokenizers_HF"]
 
 extras["dev"] = (
     extras["all"]
@@ -215,7 +215,7 @@ extras["dev"] = (
 )
 
 
-# when modifying the following list, make sure to update src/transformers/dependency_versions_check.py
+# when modifying the following list, make sure to update src/transformers_HF/dependency_versions_check.py
 install_requires = [
     deps["dataclasses"] + ";python_version<'3.7'",  # dataclasses for Python versions that don't have it
     deps["filelock"],   # filesystem locks, e.g., to prevent parallel downloads
@@ -224,12 +224,12 @@ install_requires = [
     deps["regex"],      # for OpenAI GPT
     deps["requests"],   # for downloading models over HTTPS
     deps["sacremoses"], # for XLM
-    deps["tokenizers"],
+    deps["tokenizers_HF"],
     deps["tqdm"],       # progress bars in model download and training scripts
 ]
 
 setup(
-    name="transformers",
+    name="transformers_HF",
     version="4.1.0.dev0",
     author="Thomas Wolf, Lysandre Debut, Victor Sanh, Julien Chaumond, Sam Shleifer, Patrick von Platen, Sylvain Gugger, Google AI Language Team Authors, Open AI team Authors, Facebook AI Authors, Carnegie Mellon University Authors",
     author_email="thomas@huggingface.co",

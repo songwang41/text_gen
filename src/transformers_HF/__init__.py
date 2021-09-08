@@ -19,6 +19,11 @@ else:
 
 from . import dependency_versions_check
 
+try:
+    import tokenizers_HF
+except:
+    raise Exception("Please install tokenizers_HF package!!!")
+
 # Configuration
 from .configuration_utils import PretrainedConfig
 

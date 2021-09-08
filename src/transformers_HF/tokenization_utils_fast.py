@@ -22,9 +22,9 @@ import os
 from collections import defaultdict
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-from tokenizers import Encoding as EncodingFast
-from tokenizers import Tokenizer as TokenizerFast
-from tokenizers.decoders import Decoder as DecoderFast
+from tokenizers_HF import Encoding as EncodingFast
+from tokenizers_HF import Tokenizer as TokenizerFast
+from tokenizers_HF.decoders import Decoder as DecoderFast
 
 from .convert_slow_tokenizer import convert_slow_tokenizer
 from .file_utils import add_end_docstrings

@@ -195,7 +195,7 @@ except ImportError:
 
 
 try:
-    import tokenizers  # noqa: F401
+    import tokenizers_HF
 
     _tokenizers_available = True
 
