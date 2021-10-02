@@ -39,6 +39,8 @@ class SummarizationDistiller(SummarizationModule):
 
         hparams.model_name_or_path = str(save_dir)  # Tell lightning we are training the student
         teacher = AutoModelForSeq2SeqLM.from_pretrained(hparams.teacher).eval()
+        print(f"--teacher decoder_start_token_id : {teacher.config.decoder_start_token_id}")
+
         use_task_specific_params(teacher, hparams.task)  # We copy good generation parameters to student by default
         if hparams.student is not None:
             student = AutoModelForSeq2SeqLM.from_pretrained(hparams.student)
@@ -48,6 +50,8 @@ class SummarizationDistiller(SummarizationModule):
             student, e_layer_ids, d_layer_ids = create_student_by_copying_alternating_layers(
                 teacher, e=hparams.student_encoder_layers, d=hparams.student_decoder_layers, save_path=save_dir
             )
+        student.config.decoder_start_token_id = teacher.config.decoder_start_token_id
+        print(f"--decoder_start_token_id : {student.config.decoder_start_token_id}")
 
         if hparams.length_penalty != -1:
             student.config.length_penalty = hparams.length_penalty
@@ -74,6 +78,8 @@ class SummarizationDistiller(SummarizationModule):
         # self.different_encoder determines whether we need to run the teacher encoder
         self.teacher = teacher
         freeze_params(self.teacher)
+        student.config.decoder_start_token_id = teacher.config.decoder_start_token_id
+        print(f"1 --decoder_start_token_id : {student.config.decoder_start_token_id}")
 
         if not self.different_encoder:  # To save RAM, delete teacher encoder and freeze student encoder.
             try:
@@ -110,6 +116,7 @@ class SummarizationDistiller(SummarizationModule):
         self.alpha_hid = hparams.alpha_hid
         gc.collect()
         torch.cuda.empty_cache()
+        print(f"2 --decoder_start_token_id : {student.config.decoder_start_token_id}")
 
     def calc_ce_loss(self, mask, s_logits, t_logits):
         """Copy pasted from distillbert (transformers/examples/distillation/)"""
