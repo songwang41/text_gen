@@ -13,7 +13,7 @@ def convert(src_path: str, map_location: str = "cpu", save_path: Union[str, None
     for k, v in tqdm(state_dict.items()):
         if not isinstance(v, torch.Tensor):
             raise TypeError("FP16 conversion only works on paths that are saved state dicts, like pytorch_model.bin")
-        if not isinstance(v, torch.HalfTensor):
+        if isinstance(v, torch.HalfTensor):
             print(f"{k} is already fp16..")
         else:
             state_dict[k] = v.half()
