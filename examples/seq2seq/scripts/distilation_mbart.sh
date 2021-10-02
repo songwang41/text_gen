@@ -1,3 +1,10 @@
+# this script works for a single GPU
+# you must run the model using 
+# checkout kb_sum_multilingual
+# --task summarization
+# not --decoder_start_token_id 250020
+
+
 export CUDA_VISIBLE_DEVICES=1
 ROOT_DIR=data/train_dev_multilingual_kb
 MODEL_DIR=$ROOT_DIR/kb_models_multi/trainv2_xsum_kb_len80/best_tfmr

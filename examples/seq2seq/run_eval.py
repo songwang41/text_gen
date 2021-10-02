@@ -29,6 +29,7 @@ def generate_summaries_or_translations(
     out_file: str,
     model_name: str,
     batch_size: int = 8,
+    max_src_length: int = 1024,
     device: str = DEFAULT_DEVICE,
     fp16=False,
     task="summarization",
@@ -53,7 +54,7 @@ def generate_summaries_or_translations(
         prefix = prefix or getattr(model.config, "prefix", "") or ""
     for examples_chunk in tqdm(list(chunks(examples, batch_size))):
         examples_chunk = [prefix + text for text in examples_chunk]
-        batch = tokenizer(examples_chunk, return_tensors="pt", truncation=True, padding="longest").to(device)
+        batch = tokenizer(examples_chunk, return_tensors="pt", truncation=True, max_length=max_src_length, padding="longest").to(device)
         summaries = model.generate(
             input_ids=batch.input_ids,
             attention_mask=batch.attention_mask,
@@ -101,6 +102,7 @@ def run_generate(verbose=True):
     )
     parser.add_argument("--task", type=str, default="summarization", help="used for task_specific_params + metrics")
     parser.add_argument("--bs", type=int, default=8, required=False, help="batch size")
+    parser.add_argument("--max_src_length", type=int, default=1024, required=False, help="max number of input tokens")
     parser.add_argument(
         "--n_obs", type=int, default=-1, required=False, help="How many observations. Defaults to all."
     )
@@ -129,6 +131,7 @@ def run_generate(verbose=True):
         args.save_path,
         args.model_name,
         batch_size=args.bs,
+        max_src_length=args.max_src_length,
         device=args.device,
         fp16=args.fp16,
         task=args.task,
