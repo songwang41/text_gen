@@ -1,10 +1,22 @@
+.. 
+    Copyright 2020 The HuggingFace Team. All rights reserved.
+
+    Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+    the License. You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+    an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+    specific language governing permissions and limitations under the License.
+
 BARThez
 -----------------------------------------------------------------------------------------------------------------------
 
 Overview
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The BARThez model was proposed in `BARThez: a Skilled Pretrained French Sequence-to-Sequence Model`
+The BARThez model was proposed in `BARThez: a Skilled Pretrained French Sequence-to-Sequence Model
 <https://arxiv.org/abs/2010.12321>`__ by Moussa Kamal Eddine, Antoine J.-P. Tixier, Michalis Vazirgiannis on 23 Oct,
 2020.
 
@@ -23,14 +35,15 @@ summarization dataset, OrangeSum, that we release with this paper. We also conti
 pretrained multilingual BART on BARThez's corpus, and we show that the resulting model, which we call mBARTHez,
 provides a significant boost over vanilla BARThez, and is on par with or outperforms CamemBERT and FlauBERT.*
 
-The Authors' code can be found `here <https://github.com/moussaKam/BARThez>`__.
+This model was contributed by `moussakam <https://huggingface.co/moussakam>`__. The Authors' code can be found `here
+<https://github.com/moussaKam/BARThez>`__.
 
 
 Examples
 _______________________________________________________________________________________________________________________
 
-- BARThez can be fine-tuned on sequence-to-sequence tasks in a similar way as BART, check: `examples/seq2seq/
-  <https://github.com/huggingface/transformers/blob/master/examples/seq2seq/README.md>`__.
+- BARThez can be fine-tuned on sequence-to-sequence tasks in a similar way as BART, check:
+  :prefix_link:`examples/pytorch/summarization/ <examples/pytorch/summarization/README.md>`.
 
 
 BarthezTokenizer
@@ -39,3 +52,9 @@ BarthezTokenizer
 .. autoclass:: transformers.BarthezTokenizer
     :members:
 
+
+BarthezTokenizerFast
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: transformers.BarthezTokenizerFast
+    :members:

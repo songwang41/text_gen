@@ -1,3 +1,15 @@
+.. 
+    Copyright 2020 The HuggingFace Team. All rights reserved.
+
+    Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+    the License. You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+    an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+    specific language governing permissions and limitations under the License.
+
 OpenAI GPT2
 -----------------------------------------------------------------------------------------------------------------------
 
@@ -33,7 +45,8 @@ Tips:
 Hugging Face showcasing the generative capabilities of several models. GPT-2 is one of them and is available in five
 different sizes: small, medium, large, xl and a distilled version of the small checkpoint: `distilgpt-2`.
 
-The original code can be found `here <https://openai.com/blog/better-language-models/>`__.
+This model was contributed by `thomwolf <https://huggingface.co/thomwolf>`__. The original code can be found `here
+<https://openai.com/blog/better-language-models/>`__.
 
 
 GPT2Config
@@ -114,3 +127,29 @@ TFGPT2DoubleHeadsModel
 
 .. autoclass:: transformers.TFGPT2DoubleHeadsModel
     :members: call
+
+TFGPT2ForSequenceClassification
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: transformers.TFGPT2ForSequenceClassification
+    :members: call
+
+TFSequenceClassifierOutputWithPast
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: transformers.modeling_tf_outputs.TFSequenceClassifierOutputWithPast
+    :members:
+
+
+FlaxGPT2Model
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: transformers.FlaxGPT2Model
+    :members: __call__
+
+
+FlaxGPT2LMHeadModel
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: transformers.FlaxGPT2LMHeadModel
+    :members: __call__

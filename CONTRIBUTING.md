@@ -1,3 +1,19 @@
+<!---
+Copyright 2020 The HuggingFace Team. All rights reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
 # How to contribute to transformers?
 
 Everyone is welcome to contribute, and we value everybody's contribution. Code
@@ -20,6 +36,13 @@ There are 4 ways you can contribute to transformers:
 * Contributing to the examples or to the documentation;
 * Submitting issues related to bugs or desired new features.
 
+In particular there is a special [Good First
+Issue](https://github.com/huggingface/transformers/contribute) listing. It will give you a list of
+open Issues that are open to anybody to work on. Just comment in the issue that you'd like to work
+on it. In that same listing you will also find some Issues with `Good Second Issue` label. These are
+typically slightly more complicated than the Issues with just `Good First Issue` label. But if you
+feel you know what you're doing, go for it.
+
 *All are equally valuable to the community.*
 
 ## Submitting a new issue or feature request
@@ -30,7 +53,7 @@ feedback.
 
 ### Did you find a bug?
 
-The transformers are robust and reliable thanks to the users who notify us of
+The 🤗 Transformers library is robust and reliable thanks to the users who notify us of
 the problems they encounter. So thank you for reporting an issue.
 
 First, we would really appreciate it if you could **make sure the bug was not
@@ -269,7 +292,7 @@ $ python -m pytest -n auto --dist=loadfile -s -v ./tests/
 and for the examples:
 
 ```bash
-$ pip install -r examples/requirements.txt  # only needed the first time
+$ pip install -r examples/xxx/requirements.txt  # only needed the first time
 $ python -m pytest -n auto --dist=loadfile -s -v ./examples/
 ```
 In fact, that's how `make test` and `make test-examples` are implemented (sans the `pip install` line)!
@@ -312,15 +335,22 @@ for more information.
 
 ### Develop on Windows
 
+On windows, you need to configure git to transform Windows `CRLF` line endings to Linux `LF` line endings:
+
+`git config core.autocrlf input`
+
 One way one can run the make command on Window is to pass by MSYS2:
 
 1. [Download MSYS2](https://www.msys2.org/), we assume to have it installed in C:\msys64
 2. Open the command line C:\msys64\msys2.exe (it should be available from the start menu)
 3. Run in the shell: `pacman -Syu` and install make with `pacman -S make`
+4. Add `C:\msys64\usr\bin` to your PATH environment variable.
+
+You can now use `make` from any terminal (Powershell, cmd.exe, etc) 🎉
 
 ### Syncing forked master with upstream (HuggingFace) master
 
-To avoid pinging the upstream repository which adds reference notes to each upstream PR and sends unnessary notifications to the developers involved in these PRs, 
+To avoid pinging the upstream repository which adds reference notes to each upstream PR and sends unnessary notifications to the developers involved in these PRs,
 when syncing the master branch of a forked repository, please, follow these steps:
 1. When possible, avoid syncing with the upstream using a branch and PR on the forked repository. Instead merge directly into the forked master.
 2. If a PR is absolutely necessary, use the following steps after checking out your branch:

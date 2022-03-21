@@ -1,3 +1,15 @@
+.. 
+    Copyright 2020 The HuggingFace Team. All rights reserved.
+
+    Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+    the License. You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+    an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+    specific language governing permissions and limitations under the License.
+
 Processors
 -----------------------------------------------------------------------------------------------------------------------
 
@@ -56,8 +68,8 @@ Additionally, the following method can be used to load values from a data file a
 Example usage
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-An example using these processors is given in the `run_glue.py
-<https://github.com/huggingface/pytorch-transformers/blob/master/examples/text-classification/run_glue.py>`__ script.
+An example using these processors is given in the :prefix_link:`run_glue.py
+<examples/legacy/text-classification/run_glue.py>` script.
 
 
 XNLI
@@ -77,8 +89,8 @@ This library hosts the processor to load the XNLI data:
 
 Please note that since the gold labels are available on the test set, evaluation is performed on the test set.
 
-An example using these processors is given in the `run_xnli.py
-<https://github.com/huggingface/pytorch-transformers/blob/master/examples/text-classification/run_xnli.py>`__ script.
+An example using these processors is given in the :prefix_link:`run_xnli.py
+<examples/legacy/text-classification/run_xnli.py>` script.
 
 
 SQuAD
@@ -156,5 +168,5 @@ Using `tensorflow_datasets` is as easy as using a data file:
     )
 
 
-Another example using these processors is given in the `run_squad.py
-<https://github.com/huggingface/transformers/blob/master/examples/question-answering/run_squad.py>`__ script.
+Another example using these processors is given in the :prefix_link:`run_squad.py
+<examples/legacy/question-answering/run_squad.py>` script.

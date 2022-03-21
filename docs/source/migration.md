@@ -1,3 +1,19 @@
+<!---
+Copyright 2020 The HuggingFace Team. All rights reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
 # Migrating from previous packages
 
 ## Migrating from transformers `v3.x` to `v4.x`
@@ -7,7 +23,7 @@ expected changes:
 
 #### 1. AutoTokenizers and pipelines now use fast (rust) tokenizers by default.
 
-The python and rust tokenizers have roughly the same API, but the rust tokenizers have a more complete feature set. 
+The python and rust tokenizers have roughly the same API, but the rust tokenizers have a more complete feature set.
 
 This introduces two breaking changes:
 - The handling of overflowing tokens between the python and rust tokenizers is different.
@@ -69,7 +85,7 @@ This is a breaking change as importing intermediary layers using a model's modul
 
 ##### How to obtain the same behavior as v3.x in v4.x
 
-In order to obtain the same behavior as version `v3.x`, you should update the path used to access the layers. 
+In order to obtain the same behavior as version `v3.x`, you should update the path used to access the layers.
 
 In version `v3.x`:
 ```bash
@@ -153,8 +169,8 @@ Regarding the `TFTrainer` class:
 - The `TFTrainer` method `_setup_wandb` is deprecated in favor of `setup_wandb`.
 - The `TFTrainer` method `_run_model` is deprecated in favor of `run_model`.
 
-Regarding the `TrainerArgument` class:
-- The `TrainerArgument` argument `evaluate_during_training` is deprecated in favor of `evaluation_strategy`.
+Regarding the `TrainingArguments` class:
+- The `TrainingArguments` argument `evaluate_during_training` is deprecated in favor of `evaluation_strategy`.
 
 Regarding the Transfo-XL model:
 - The Transfo-XL configuration attribute `tie_weight` becomes `tie_words_embeddings`.

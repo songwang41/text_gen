@@ -1,3 +1,15 @@
+.. 
+    Copyright 2020 The HuggingFace Team. All rights reserved.
+
+    Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+    the License. You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+    an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+    specific language governing permissions and limitations under the License.
+
 Glossary
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -9,22 +21,25 @@ General terms
 - CLM: causal language modeling, a pretraining task where the model reads the texts in order and has to predict the
   next word. It's usually done by reading the whole sentence but using a mask inside the model to hide the future
   tokens at a certain timestep.
+- deep learning: machine learning algorithms which uses neural networks with several layers.
 - MLM: masked language modeling, a pretraining task where the model sees a corrupted version of the texts, usually done
   by masking some tokens randomly, and has to predict the original text.
 - multimodal: a task that combines texts with another kind of inputs (for instance images).
-- NLG: natural language generation, all tasks related to generating text ( for instance talk with transformers,
-  translation)
+- NLG: natural language generation, all tasks related to generating text (for instance talk with transformers,
+  translation).
 - NLP: natural language processing, a generic way to say "deal with texts".
 - NLU: natural language understanding, all tasks related to understanding what is in a text (for instance classifying
-  the whole text, individual words)
+  the whole text, individual words).
 - pretrained model: a model that has been pretrained on some data (for instance all of Wikipedia). Pretraining methods
   involve a self-supervised objective, which can be reading the text and trying to predict the next word (see CLM) or
   masking some words and trying to predict them (see MLM).
 - RNN: recurrent neural network, a type of model that uses a loop over a layer to process texts.
+- self-attention: each element of the input finds out which other elements of the input they should attend to.
 - seq2seq or sequence-to-sequence: models that generate a new sequence from an input, like translation models, or
   summarization models (such as :doc:`Bart </model_doc/bart>` or :doc:`T5 </model_doc/t5>`).
 - token: a part of a sentence, usually a word, but can also be a subword (non-common words are often split in subwords)
   or a punctuation symbol.
+- transformer: self-attention based deep learning model architecture.
 
 Model inputs
 -----------------------------------------------------------------------------------------------------------------------
@@ -39,6 +54,12 @@ Input IDs
 
 The input ids are often the only required parameters to be passed to the model as input. *They are token indices,
 numerical representations of tokens building the sequences that will be used as input by the model*.
+
+.. raw:: html
+
+   <iframe width="560" height="315" src="https://www.youtube.com/embed/VFp38yj8h3A" title="YouTube video player"
+   frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope;
+   picture-in-picture" allowfullscreen></iframe>
 
 Each tokenizer works differently but the underlying mechanism remains the same. Here's an example using the BERT
 tokenizer, which is a `WordPiece <https://arxiv.org/pdf/1609.08144.pdf>`__ tokenizer:
@@ -105,8 +126,15 @@ because this is the way a :class:`~transformers.BertModel` is going to expect it
 Attention mask
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The attention mask is an optional argument used when batching sequences together. This argument indicates to the model
-which tokens should be attended to, and which should not.
+The attention mask is an optional argument used when batching sequences together.
+
+.. raw:: html
+
+   <iframe width="560" height="315" src="https://www.youtube.com/embed/M6adb1j2jPI" title="YouTube video player"
+   frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope;
+   picture-in-picture" allowfullscreen></iframe>
+
+This argument indicates to the model which tokens should be attended to, and which should not.
 
 For example, consider these two sequences:
 
@@ -160,14 +188,21 @@ in the dictionary returned by the tokenizer under the key "attention_mask":
 Token Type IDs
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Some models' purpose is to do sequence classification or question answering. These require two different sequences to
-be joined in a single "input_ids" entry, which usually is performed with the help of special tokens, such as the
-classifier (``[CLS]``) and separator (``[SEP]``) tokens. For example, the BERT model builds its two sequence input as
-such:
+Some models' purpose is to do classification on pairs of sentences or question answering.
+
+.. raw:: html
+
+   <iframe width="560" height="315" src="https://www.youtube.com/embed/0u3ioSwev3s" title="YouTube video player"
+   frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope;
+   picture-in-picture" allowfullscreen></iframe>
+
+These require two different sequences to be joined in a single "input_ids" entry, which usually is performed with the
+help of special tokens, such as the classifier (``[CLS]``) and separator (``[SEP]``) tokens. For example, the BERT
+model builds its two sequence input as such:
 
 .. code-block::
 
-   >>> # [CLS] SEQUENCE_A [SEP] SEQUENCE_B [SEP]
+    >>> # [CLS] SEQUENCE_A [SEP] SEQUENCE_B [SEP]
 
 We can use our tokenizer to automatically generate such a sentence by passing the two sequences to ``tokenizer`` as two
 arguments (and not a list, like before) like this:
@@ -214,7 +249,7 @@ Contrary to RNNs that have the position of each token embedded within them, tran
 each token. Therefore, the position IDs (``position_ids``) are used by the model to identify each token's position in
 the list of tokens.
 
-They are an optional parameter. If no ``position_ids`` is passed to the model, the IDs are automatically created as
+They are an optional parameter. If no ``position_ids`` are passed to the model, the IDs are automatically created as
 absolute positional embeddings.
 
 Absolute positional embeddings are selected in the range ``[0, config.max_position_embeddings - 1]``. Some models use

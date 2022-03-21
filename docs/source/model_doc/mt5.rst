@@ -1,3 +1,15 @@
+.. 
+    Copyright 2020 The HuggingFace Team. All rights reserved.
+
+    Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+    the License. You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+    an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+    specific language governing permissions and limitations under the License.
+
 MT5
 -----------------------------------------------------------------------------------------------------------------------
 
@@ -16,13 +28,30 @@ multilingual variant of T5 that was pre-trained on a new Common Crawl-based data
 the design and modified training of mT5 and demonstrate its state-of-the-art performance on many multilingual
 benchmarks. All of the code and model checkpoints*
 
-The original code can be found `here <https://github.com/google-research/multilingual-t5>`__.
+This model was contributed by `patrickvonplaten <https://huggingface.co/patrickvonplaten>`__. The original code can be
+found `here <https://github.com/google-research/multilingual-t5>`__.
 
 MT5Config
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: transformers.MT5Config
     :members:
+
+
+MT5Tokenizer
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: transformers.MT5Tokenizer
+
+See :class:`~transformers.T5Tokenizer` for all details.
+
+
+MT5TokenizerFast
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: transformers.MT5TokenizerFast
+
+See :class:`~transformers.T5TokenizerFast` for all details.
 
 
 MT5Model

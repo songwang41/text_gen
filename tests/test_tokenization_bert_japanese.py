@@ -1,5 +1,5 @@
 # coding=utf-8
-# Copyright 2018 The Google AI Language Team Authors.
+# Copyright 2020 The HuggingFace Team. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -35,6 +35,7 @@ from .test_tokenization_common import TokenizerTesterMixin
 class BertJapaneseTokenizationTest(TokenizerTesterMixin, unittest.TestCase):
 
     tokenizer_class = BertJapaneseTokenizer
+    test_rust_tokenizer = False
     space_between_special_tokens = True
 
     def setUp(self):
@@ -204,6 +205,7 @@ class BertJapaneseTokenizationTest(TokenizerTesterMixin, unittest.TestCase):
 class BertJapaneseCharacterTokenizationTest(TokenizerTesterMixin, unittest.TestCase):
 
     tokenizer_class = BertJapaneseTokenizer
+    test_rust_tokenizer = False
 
     def setUp(self):
         super().setUp()

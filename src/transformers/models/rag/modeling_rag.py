@@ -18,6 +18,7 @@ from dataclasses import dataclass
 from typing import Callable, List, Optional, Tuple
 
 import torch
+from torch import nn
 
 from ...configuration_utils import PretrainedConfig
 from ...file_utils import add_start_docstrings_to_model_forward, replace_return_docstrings
@@ -102,6 +103,12 @@ class RetrievAugLMMarginOutput(ModelOutput):
 
             Attentions weights of the generator decoder, after the attention softmax, used to compute the weighted
             average in the self-attention heads.
+        generator_cross_attentions (:obj:`tuple(torch.FloatTensor)`, `optional`, returned when ``output_attentions=True`` is passed or when ``config.output_attentions=True``):
+            Tuple of :obj:`torch.FloatTensor` (one for each layer) of shape :obj:`(batch_size, num_heads,
+            sequence_length, sequence_length)`.
+
+            Cross-attentions weights of the generator decoder, after the attention softmax, used to compute the
+            weighted average in the cross-attention heads.
     """
 
     loss: Optional[torch.FloatTensor] = None
@@ -120,6 +127,7 @@ class RetrievAugLMMarginOutput(ModelOutput):
     generator_enc_attentions: Optional[Tuple[torch.FloatTensor]] = None
     generator_dec_hidden_states: Optional[Tuple[torch.FloatTensor]] = None
     generator_dec_attentions: Optional[Tuple[torch.FloatTensor]] = None
+    generator_cross_attentions: Optional[Tuple[torch.FloatTensor]] = None
 
 
 @dataclass
@@ -186,6 +194,12 @@ class RetrievAugLMOutput(ModelOutput):
 
             Attentions weights of the generator decoder, after the attention softmax, used to compute the weighted
             average in the self-attention heads.
+        generator_cross_attentions (:obj:`tuple(torch.FloatTensor)`, `optional`, returned when ``output_attentions=True`` is passed or when ``config.output_attentions=True``):
+            Tuple of :obj:`torch.FloatTensor` (one for each layer) of shape :obj:`(batch_size, num_heads,
+            sequence_length, sequence_length)`.
+
+            Cross-attentions weights of the generator decoder, after the attention softmax, used to compute the
+            weighted average in the cross-attention heads.
     """
 
     logits: torch.FloatTensor = None
@@ -203,6 +217,7 @@ class RetrievAugLMOutput(ModelOutput):
     generator_enc_attentions: Optional[Tuple[torch.FloatTensor]] = None
     generator_dec_hidden_states: Optional[Tuple[torch.FloatTensor]] = None
     generator_dec_attentions: Optional[Tuple[torch.FloatTensor]] = None
+    generator_cross_attentions: Optional[Tuple[torch.FloatTensor]] = None
 
 
 class RagPreTrainedModel(PreTrainedModel):
@@ -219,12 +234,18 @@ class RagPreTrainedModel(PreTrainedModel):
     _keys_to_ignore_on_load_missing = [r"position_ids"]
 
     @classmethod
+    def from_pretrained(cls, *args, **kwargs):
+        # At the moment fast initialization is not supported
+        # for composite models
+        kwargs["_fast_init"] = False
+        return super().from_pretrained(*args, **kwargs)
+
+    @classmethod
     def from_pretrained_question_encoder_generator(
         cls,
         question_encoder_pretrained_model_name_or_path: str = None,
         generator_pretrained_model_name_or_path: str = None,
         retriever: RagRetriever = None,
-        *model_args,
         **kwargs
     ) -> PreTrainedModel:
         r"""
@@ -289,7 +310,7 @@ class RagPreTrainedModel(PreTrainedModel):
         """
 
         kwargs_question_encoder = {
-            argument[len("question_question_encoder_") :]: value
+            argument[len("question_encoder_") :]: value
             for argument, value in kwargs.items()
             if argument.startswith("question_encoder_")
         }
@@ -319,11 +340,15 @@ class RagPreTrainedModel(PreTrainedModel):
             if "config" not in kwargs_question_encoder:
                 from ..auto.configuration_auto import AutoConfig
 
-                question_encoder_config = AutoConfig.from_pretrained(question_encoder_pretrained_model_name_or_path)
+                question_encoder_config, kwargs_question_encoder = AutoConfig.from_pretrained(
+                    question_encoder_pretrained_model_name_or_path,
+                    **kwargs_question_encoder,
+                    return_unused_kwargs=True,
+                )
                 kwargs_question_encoder["config"] = question_encoder_config
 
             question_encoder = AutoModel.from_pretrained(
-                question_encoder_pretrained_model_name_or_path, *model_args, **kwargs_question_encoder
+                question_encoder_pretrained_model_name_or_path, **kwargs_question_encoder
             )
 
         generator = kwargs_generator.pop("model", None)
@@ -336,7 +361,10 @@ class RagPreTrainedModel(PreTrainedModel):
             if "config" not in kwargs_generator:
                 from ..auto.configuration_auto import AutoConfig
 
-                generator_config = AutoConfig.from_pretrained(generator_pretrained_model_name_or_path)
+                generator_config, kwargs_generator = AutoConfig.from_pretrained(
+                    generator_pretrained_model_name_or_path, **kwargs_generator, return_unused_kwargs=True
+                )
+
                 kwargs_generator["config"] = generator_config
 
             generator = AutoModelForSeq2SeqLM.from_pretrained(
@@ -377,6 +405,7 @@ RAG_START_DOCSTRING = r"""
     subclass. Use it as a regular PyTorch Module and refer to the PyTorch documentation for all matter related to
     general usage and behavior.
 
+
     Args:
         config (:class:`~transformers.RagConfig`):
             Model configuration class with all the parameters of the model. Initializing with a config file does not
@@ -397,6 +426,8 @@ RAG_FORWARD_INPUTS_DOCSTRING = r"""
             Indices of input sequence tokens in the vocabulary. :class:`~transformers.RagConfig`, used to initialize
             the model, specifies which generator to use, it also specifies a compatible generator tokenizer. Use that
             tokenizer class to obtain the indices.
+
+            `What are input IDs? <../glossary.html#input-ids>`__
         attention_mask (:obj:`torch.Tensor` of shape :obj:`(batch_size, sequence_length)`, `optional`):
             Mask to avoid performing attention on padding token indices. Mask values selected in ``[0, 1]``:
 
@@ -477,9 +508,7 @@ class RagModel(RagPreTrainedModel):
                 question_encoder.config, generator.config, **kwargs
             )
         else:
-            assert isinstance(config, self.config_class), "config: {} has to be of type {}".format(
-                config, self.config_class
-            )
+            assert isinstance(config, self.config_class), f"config: {config} has to be of type {self.config_class}"
         super().__init__(config)
         if question_encoder is None:
             from ..auto.modeling_auto import AutoModel
@@ -500,6 +529,9 @@ class RagModel(RagPreTrainedModel):
 
         self.question_encoder = question_encoder
         self.generator = generator
+
+        self.ctx_encoder = None
+        self.context_encoder_training = False
 
     @add_start_docstrings_to_model_forward(RAG_FORWARD_INPUTS_DOCSTRING)
     @replace_return_docstrings(output_type=RetrievAugLMOutput, config_class=_CONFIG_FOR_DOC)
@@ -533,10 +565,8 @@ class RagModel(RagPreTrainedModel):
             >>> # initialize with RagRetriever to do everything in one forward call
             >>> model = RagModel.from_pretrained("facebook/rag-token-base", retriever=retriever)
 
-            >>> input_dict = tokenizer.prepare_seq2seq_batch("How many people live in Paris?", "In Paris, there are 10 million people.", return_tensors="pt")
-            >>> input_ids = input_dict["input_ids"]
-            >>> outputs = model(input_ids=input_ids)
-
+            >>> inputs = tokenizer("How many people live in Paris?", return_tensors="pt")
+            >>> outputs = model(input_ids=inputs["input_ids"])
         """
         n_docs = n_docs if n_docs is not None else self.config.n_docs
         use_cache = use_cache if use_cache is not None else self.config.use_cache
@@ -568,22 +598,58 @@ class RagModel(RagPreTrainedModel):
                     n_docs=n_docs,
                     return_tensors="pt",
                 )
-                context_input_ids, context_attention_mask, retrieved_doc_embeds, retrieved_doc_ids = (
-                    retriever_outputs["context_input_ids"],
-                    retriever_outputs["context_attention_mask"],
-                    retriever_outputs["retrieved_doc_embeds"],
-                    retriever_outputs["doc_ids"],
-                )
+                if self.context_encoder_training:
 
-                # set to correct device
-                retrieved_doc_embeds = retrieved_doc_embeds.to(question_encoder_last_hidden_state)
-                context_input_ids = context_input_ids.to(input_ids)
-                context_attention_mask = context_attention_mask.to(input_ids)
+                    (
+                        context_input_ids,
+                        context_attention_mask,
+                        retrieved_doc_embeds,
+                        retrived_doc_input_ids,
+                        retrived_doc_attention_mask,
+                        retrieved_doc_ids,
+                    ) = (
+                        retriever_outputs["context_input_ids"],
+                        retriever_outputs["context_attention_mask"],
+                        retriever_outputs["retrieved_doc_embeds"],
+                        retriever_outputs["tokenized_doc_ids"],
+                        retriever_outputs["tokenized_doc_attention_mask"],
+                        retriever_outputs["doc_ids"],
+                    )
 
-                # compute doc_scores
-                doc_scores = torch.bmm(
-                    question_encoder_last_hidden_state.unsqueeze(1), retrieved_doc_embeds.transpose(1, 2)
-                ).squeeze(1)
+                    context_input_ids = context_input_ids.to(input_ids)
+                    context_attention_mask = context_attention_mask.to(input_ids)
+
+                    retrived_doc_input_ids = retrived_doc_input_ids.to(input_ids)
+                    retrived_doc_attention_mask = retrived_doc_attention_mask.to(input_ids)
+                    retrieved_doc_embeds = self.ctx_encoder(
+                        retrived_doc_input_ids, attention_mask=retrived_doc_attention_mask, return_dict=True
+                    ).pooler_output
+                    retrieved_doc_embeds = retrieved_doc_embeds.view(
+                        -1, n_docs, question_encoder_last_hidden_state.shape[1]
+                    )  # reshaping
+
+                    # compute doc_scores involving ctx_encoder
+                    doc_scores = torch.bmm(
+                        question_encoder_last_hidden_state.unsqueeze(1), retrieved_doc_embeds.transpose(1, 2)
+                    ).squeeze(1)
+
+                else:
+                    context_input_ids, context_attention_mask, retrieved_doc_embeds, retrieved_doc_ids = (
+                        retriever_outputs["context_input_ids"],
+                        retriever_outputs["context_attention_mask"],
+                        retriever_outputs["retrieved_doc_embeds"],
+                        retriever_outputs["doc_ids"],
+                    )
+
+                    # set to correct device
+                    retrieved_doc_embeds = retrieved_doc_embeds.to(question_encoder_last_hidden_state)
+                    context_input_ids = context_input_ids.to(input_ids)
+                    context_attention_mask = context_attention_mask.to(input_ids)
+
+                    # compute doc_scores
+                    doc_scores = torch.bmm(
+                        question_encoder_last_hidden_state.unsqueeze(1), retrieved_doc_embeds.transpose(1, 2)
+                    ).squeeze(1)
             else:
                 assert (
                     context_input_ids is not None
@@ -618,6 +684,7 @@ class RagModel(RagPreTrainedModel):
             decoder_attention_mask=decoder_attention_mask,
             past_key_values=past_key_values,
             use_cache=use_cache,
+            output_attentions=output_attentions,
             return_dict=True,
         )
 
@@ -654,6 +721,7 @@ class RagModel(RagPreTrainedModel):
             generator_enc_attentions=gen_outputs.encoder_attentions,
             generator_dec_hidden_states=gen_outputs.decoder_hidden_states,
             generator_dec_attentions=gen_outputs.decoder_attentions,
+            generator_cross_attentions=gen_outputs.cross_attentions,
         )
 
 
@@ -687,6 +755,10 @@ class RagSequenceForGeneration(RagPreTrainedModel):
 
     def set_retriever(self, retriever: RagRetriever):
         self.rag.retriever = retriever
+
+    def set_context_encoder_for_training(self, ctx_encoder: PreTrainedModel):
+        self.rag.context_encoder_training = True
+        self.rag.ctx_encoder = ctx_encoder
 
     @add_start_docstrings_to_model_forward(RAG_FORWARD_INPUTS_DOCSTRING)
     @replace_return_docstrings(output_type=RetrievAugLMMarginOutput, config_class=_CONFIG_FOR_DOC)
@@ -733,9 +805,12 @@ class RagSequenceForGeneration(RagPreTrainedModel):
             >>> # initialize with RagRetriever to do everything in one forward call
             >>> model = RagSequenceForGeneration.from_pretrained("facebook/rag-token-nq", retriever=retriever)
 
-            >>> input_dict = tokenizer.prepare_seq2seq_batch("How many people live in Paris?", "In Paris, there are 10 million people.", return_tensors="pt")
-            >>> input_ids = input_dict["input_ids"]
-            >>> outputs = model(input_ids=input_ids, labels=input_dict["labels"])
+            >>> inputs = tokenizer("How many people live in Paris?", return_tensors="pt")
+            >>> with tokenizer.as_target_tokenizer():
+            ...    targets = tokenizer("In Paris, there are 10 million people.", return_tensors="pt")
+            >>> input_ids = inputs["input_ids"]
+            >>> labels = targets["input_ids"]
+            >>> outputs = model(input_ids=input_ids, labels=labels)
 
             >>> # or use retriever separately
             >>> model = RagSequenceForGeneration.from_pretrained("facebook/rag-sequence-nq", use_dummy_dataset=True)
@@ -745,7 +820,7 @@ class RagSequenceForGeneration(RagPreTrainedModel):
             >>> docs_dict = retriever(input_ids.numpy(), question_hidden_states.detach().numpy(), return_tensors="pt")
             >>> doc_scores = torch.bmm(question_hidden_states.unsqueeze(1), docs_dict["retrieved_doc_embeds"].float().transpose(1, 2)).squeeze(1)
             >>> # 3. Forward to generator
-            >>> outputs = model(context_input_ids=docs_dict["context_input_ids"], context_attention_mask=docs_dict["context_attention_mask"], doc_scores=doc_scores, decoder_input_ids=input_dict["labels"])
+            >>> outputs = model(context_input_ids=docs_dict["context_input_ids"], context_attention_mask=docs_dict["context_attention_mask"], doc_scores=doc_scores, decoder_input_ids=labels)
         """
         n_docs = n_docs if n_docs is not None else self.config.n_docs
         exclude_bos_score = exclude_bos_score if exclude_bos_score is not None else self.config.exclude_bos_score
@@ -802,6 +877,7 @@ class RagSequenceForGeneration(RagPreTrainedModel):
             generator_enc_attentions=outputs.generator_enc_attentions,
             generator_dec_hidden_states=outputs.generator_dec_hidden_states,
             generator_dec_attentions=outputs.generator_dec_attentions,
+            generator_cross_attentions=outputs.generator_cross_attentions,
         )
 
     @property
@@ -822,6 +898,8 @@ class RagSequenceForGeneration(RagPreTrainedModel):
         input_ids: Optional[torch.LongTensor] = None,
         attention_mask: Optional[torch.LongTensor] = None,
         context_input_ids=None,
+        context_attention_mask=None,
+        doc_scores=None,
         do_deduplication=None,  # defaults to True
         num_return_sequences=None,  # defaults to 1
         num_beams=None,  # defaults to 1
@@ -829,8 +907,9 @@ class RagSequenceForGeneration(RagPreTrainedModel):
         **model_kwargs
     ):
         """
-        Implements RAG sequence "thorough" decoding. Read the :meth:`~transformers.PreTrainedModel.generate``
-        documentation for more information on how to set other generate input parameters.
+        Implements RAG sequence "thorough" decoding. Read the
+        :meth:`~transformers.generation_utils.GenerationMixin.generate`` documentation for more information on how to
+        set other generate input parameters.
 
         Args:
             input_ids (:obj:`torch.LongTensor` of shape :obj:`(batch_size, sequence_length)`, `optional`):
@@ -846,19 +925,34 @@ class RagSequenceForGeneration(RagPreTrainedModel):
             context_input_ids (:obj:`torch.LongTensor` of shape :obj:`(batch_size * config.n_docs, config.max_combined_length)`, `optional`, returned when `output_retrieved=True`):
                 Input IDs post-processed from the retrieved documents and the question encoder input_ids by the
                 retriever.
+            context_attention_mask (:obj:`torch.LongTensor` of shape :obj:`(batch_size * config.n_docs, config.max_combined_length)`, `optional`, returned when `output_retrieved=True`):
+                Attention mask post-processed from the retrieved documents and the question encoder :obj:`input_ids` by
+                the retriever.
+
+                If the model is not initialized with a ``retriever`` or ``input_ids`` is not given,
+                :obj:`context_input_ids` and :obj:`context_attention_mask` have to be provided to the forward pass.
+                They are returned by :meth:`~transformers.RagRetriever.__call__`.
+            doc_scores (:obj:`torch.FloatTensor` of shape :obj:`(batch_size, config.n_docs)`):
+                Score between each retrieved document embeddings (see :obj:`retrieved_doc_embeds`) and
+                :obj:`question_encoder_last_hidden_state`.
+
+                If the model is not initialized with a ``retriever`` or ``input_ids`` is not given, :obj:`doc_scores`
+                has to be provided to the forward pass. :obj:`doc_scores` are returned by
+                :meth:`~transformers.RagRetriever.__call__`.
             do_deduplication (:obj:`bool`, `optional`):
                 Whether or not to deduplicate the generations from different context documents for a given input. Has
                 to be set to :obj:`False` if used while training with distributed backend.
             num_return_sequences(:obj:`int`, `optional`, defaults to 1):
                 The number of independently computed returned sequences for each element in the batch. Note that this
-                is not the value we pass to the ``generator``'s `:func:`~transformers.PreTrainedModel.generate``
-                function, where we set ``num_return_sequences`` to :obj:`num_beams`.
+                is not the value we pass to the ``generator``'s
+                `:func:`~transformers.generation_utils.GenerationMixin.generate`` function, where we set
+                ``num_return_sequences`` to :obj:`num_beams`.
             num_beams (:obj:`int`, `optional`, defaults to 1):
                 Number of beams for beam search. 1 means no beam search.
             n_docs (:obj:`int`, `optional`, defaults to :obj:`config.n_docs`)
                 Number of documents to retrieve and/or number of documents for which to generate an answer.
             kwargs:
-                Additional kwargs will be passed to :meth:`~transformers.PreTrainedModel.generate`.
+                Additional kwargs will be passed to :meth:`~transformers.generation_utils.GenerationMixin.generate`.
 
         Return:
             :obj:`torch.LongTensor` of shape :obj:`(batch_size * num_return_sequences, sequence_length)`: The generated
@@ -872,6 +966,10 @@ class RagSequenceForGeneration(RagPreTrainedModel):
             num_return_sequences if num_return_sequences is not None else self.config.num_return_sequences
         )
         num_beams = num_beams if num_beams is not None else self.config.num_beams
+
+        assert (
+            input_ids is not None or context_input_ids is not None
+        ), " At least one of input_ids or context_input_ids must be given"
 
         if self.retriever is not None and context_input_ids is None:
             question_hidden_states = self.question_encoder(input_ids, attention_mask=attention_mask)[0]
@@ -891,7 +989,9 @@ class RagSequenceForGeneration(RagPreTrainedModel):
         model_kwargs["num_return_sequences"] = num_beams
         model_kwargs["attention_mask"] = None
 
-        for index in range(len(input_ids)):
+        batch_size = input_ids.shape[0] if input_ids is not None else context_input_ids.shape[0] // n_docs
+
+        for index in range(batch_size):
             # first, generate beams from documents:
             generator_input_ids = context_input_ids[index * n_docs : (index + 1) * n_docs]  # (n_docs, max_len)
 
@@ -903,9 +1003,40 @@ class RagSequenceForGeneration(RagPreTrainedModel):
                 # do_deduplication, max_output_len
                 output_sequences = torch.stack(list({str(k.tolist()): k for k in output_sequences}.values()))
 
+            num_candidates = output_sequences.shape[
+                0
+            ]  # after deduplication, this number can be less than n_docs*n_beam
+
             # then, run model forwards to get nll scores:
-            new_input_ids = input_ids[index : index + 1].repeat(len(output_sequences), 1)
-            outputs = self(new_input_ids, labels=output_sequences, exclude_bos_score=True)
+            if input_ids is not None:
+                new_input_ids = input_ids[index : index + 1].repeat(num_candidates, 1)
+                outputs = self(new_input_ids, labels=output_sequences, exclude_bos_score=True)
+            else:  # input_ids is None, need context_input_ids/mask and doc_scores
+                assert (
+                    context_attention_mask is not None
+                ), "Make sure that `context_attention_mask` are passed, if no `input_ids` is set. Alternatively, you can set a retriever using the `set_retriever(...)` function."
+                assert (
+                    doc_scores is not None
+                ), "Make sure that `doc_scores` are passed, if no `input_ids` is set. Alternatively, you can set a retriever using the `set_retriever(...)` function."
+
+                individual_input_ids = generator_input_ids.repeat(
+                    num_candidates, 1
+                )  # (num_candidates*n_docs, max_len)
+
+                individual_attention_mask = context_attention_mask[index * n_docs : (index + 1) * n_docs]
+                individual_attention_mask = individual_attention_mask.repeat(num_candidates, 1)
+
+                individual_doc_scores = doc_scores[index : (index + 1), :]  # doc_scores.shape = [batch, n_docs]
+                individual_doc_scores = individual_doc_scores.repeat(num_candidates, 1)  # [num_candidates, n_docs]
+
+                outputs = self(
+                    context_input_ids=individual_input_ids,
+                    context_attention_mask=individual_attention_mask,
+                    doc_scores=individual_doc_scores,
+                    labels=output_sequences,
+                    exclude_bos_score=True,
+                )
+
             top_cand_inds = (-outputs["loss"]).topk(num_doc_return_sequences)[1]
 
             # add hypothesis
@@ -934,10 +1065,11 @@ class RagSequenceForGeneration(RagPreTrainedModel):
                 smooth_obj.masked_fill_(pad_mask, 0.0)
             return ll.squeeze(-1), smooth_obj.squeeze(-1)
 
-        seq_logprobs = torch.nn.functional.log_softmax(seq_logits, dim=-1).view(
+        # seq_logits dim = (batch*n_docs, tgt_len , #vocabs)
+        seq_logprobs = nn.functional.log_softmax(seq_logits, dim=-1).view(
             seq_logits.shape[0] // n_docs, n_docs, -1, seq_logits.size(-1)
-        )  # batch_size x n_docs x tgt_len x dim
-        doc_logprobs = torch.nn.functional.log_softmax(doc_scores, dim=1).unsqueeze(-1).unsqueeze(-1)
+        )  # batch_size x n_docs x tgt_len x #vocab_size
+        doc_logprobs = nn.functional.log_softmax(doc_scores, dim=1).unsqueeze(-1).unsqueeze(-1)
 
         # RAG-sequence marginalization
         first_token_scores = seq_logprobs[:, :, :1, :]
@@ -1015,8 +1147,9 @@ class RagTokenForGeneration(RagPreTrainedModel):
     def set_retriever(self, retriever: RagRetriever):
         self.rag.retriever = retriever
 
-    def adjust_logits_during_generation(self, logits, cur_len, max_length):
-        return self.rag.generator.adjust_logits_during_generation(logits, cur_len=cur_len, max_length=max_length)
+    def set_context_encoder_for_training(self, ctx_encoder: PreTrainedModel):
+        self.rag.context_encoder_training = True
+        self.rag.ctx_encoder = ctx_encoder
 
     def prepare_inputs_for_generation(
         self,
@@ -1029,6 +1162,10 @@ class RagTokenForGeneration(RagPreTrainedModel):
         n_docs=None,
         **kwargs
     ):
+        if past is not None:
+            # if past is defined use only last decoder_input_ids
+            decoder_input_ids = decoder_input_ids[:, -1:]
+
         return {
             "input_ids": None,
             "encoder_outputs": encoder_outputs,
@@ -1057,23 +1194,17 @@ class RagTokenForGeneration(RagPreTrainedModel):
     def _reorder_cache(past, beam_idx):
         """Reorders cache for generation. BART-inspired but we need to take care of the extra dimension for docs"""
 
-        def _reorder_stacked(hidden_states):
-            n_docs = hidden_states.shape[0] // beam_idx.shape[0]
+        def _reorder_stacked(hidden_states, new_order):
+            n_docs = hidden_states.shape[0] // new_order.shape[0]
             hidden_states = hidden_states.view(-1, n_docs, *hidden_states.shape[1:])
-            hidden_states = hidden_states.index_select(0, beam_idx)
-            return hidden_states.view(-1, *hidden_states.shape[2:])
+            hidden_states = hidden_states.index_select(0, new_order)
+            result = hidden_states.view(-1, *hidden_states.shape[2:])
+            return result
 
-        def _reorder_buffer(attn_cache):
-            for k, input_buffer_k in attn_cache.items():
-                if input_buffer_k is not None:
-                    attn_cache[k] = _reorder_stacked(input_buffer_k)
-            return attn_cache
-
-        reordered_past = []
+        reordered_past = ()
         for layer_past in past:
             # get the correct batch idx from decoder layer's batch dim for cross and self-attn
-            layer_past_new = {attn_key: _reorder_buffer(attn_cache) for attn_key, attn_cache in layer_past.items()}
-            reordered_past.append(layer_past_new)
+            reordered_past += (tuple(_reorder_stacked(past_state, beam_idx) for past_state in layer_past),)
 
         return reordered_past
 
@@ -1082,7 +1213,7 @@ class RagTokenForGeneration(RagPreTrainedModel):
         n_docs = n_docs if n_docs is not None else self.config.n_docs
 
         # RAG-token marginalization
-        seq_logprobs = torch.nn.functional.log_softmax(seq_logits, dim=-1).view(
+        seq_logprobs = nn.functional.log_softmax(seq_logits, dim=-1).view(
             seq_logits.shape[0] // n_docs, n_docs, -1, seq_logits.size(-1)
         )
         doc_logprobs = torch.log_softmax(doc_scores, dim=1)
@@ -1134,9 +1265,12 @@ class RagTokenForGeneration(RagPreTrainedModel):
             >>> # initialize with RagRetriever to do everything in one forward call
             >>> model = RagTokenForGeneration.from_pretrained("facebook/rag-token-nq", retriever=retriever)
 
-            >>> input_dict = tokenizer.prepare_seq2seq_batch("How many people live in Paris?", "In Paris, there are 10 million people.", return_tensors="pt")
-            >>> input_ids = input_dict["input_ids"]
-            >>> outputs = model(input_ids=input_ids, labels=input_dict["labels"])
+            >>> inputs = tokenizer("How many people live in Paris?", return_tensors="pt")
+            >>> with tokenizer.as_target_tokenizer():
+            ...    targets = tokenizer("In Paris, there are 10 million people.", return_tensors="pt")
+            >>> input_ids = inputs["input_ids"]
+            >>> labels = targets["input_ids"]
+            >>> outputs = model(input_ids=input_ids, labels=labels)
 
             >>> # or use retriever separately
             >>> model = RagTokenForGeneration.from_pretrained("facebook/rag-token-nq", use_dummy_dataset=True)
@@ -1146,7 +1280,7 @@ class RagTokenForGeneration(RagPreTrainedModel):
             >>> docs_dict = retriever(input_ids.numpy(), question_hidden_states.detach().numpy(), return_tensors="pt")
             >>> doc_scores = torch.bmm(question_hidden_states.unsqueeze(1), docs_dict["retrieved_doc_embeds"].float().transpose(1, 2)).squeeze(1)
             >>> # 3. Forward to generator
-            >>> outputs = model(context_input_ids=docs_dict["context_input_ids"], context_attention_mask=docs_dict["context_attention_mask"], doc_scores=doc_scores, decoder_input_ids=input_dict["labels"])
+            >>> outputs = model(context_input_ids=docs_dict["context_input_ids"], context_attention_mask=docs_dict["context_attention_mask"], doc_scores=doc_scores, decoder_input_ids=labels)
 
             >>> # or directly generate
             >>> generated = model.generate(context_input_ids=docs_dict["context_input_ids"], context_attention_mask=docs_dict["context_attention_mask"], doc_scores=doc_scores)
@@ -1211,6 +1345,7 @@ class RagTokenForGeneration(RagPreTrainedModel):
             generator_enc_attentions=outputs.generator_enc_attentions,
             generator_dec_hidden_states=outputs.generator_dec_hidden_states,
             generator_dec_attentions=outputs.generator_dec_attentions,
+            generator_cross_attentions=outputs.generator_cross_attentions,
         )
 
     @torch.no_grad()
@@ -1226,17 +1361,23 @@ class RagTokenForGeneration(RagPreTrainedModel):
         early_stopping=None,
         use_cache=None,
         num_beams=None,
+        num_beam_groups=None,
+        diversity_penalty=None,
         bos_token_id=None,
         pad_token_id=None,
         eos_token_id=None,
         length_penalty=None,
         no_repeat_ngram_size=None,
+        encoder_no_repeat_ngram_size=None,
         repetition_penalty=None,
         bad_words_ids=None,
         num_return_sequences=None,
         decoder_start_token_id=None,
         n_docs=None,
         prefix_allowed_tokens_fn: Callable[[int, torch.Tensor], List[int]] = None,
+        forced_bos_token_id: Optional[int] = None,
+        forced_eos_token_id: Optional[int] = None,
+        remove_invalid_values: Optional[bool] = None,
         **model_kwargs
     ):
         """
@@ -1297,15 +1438,26 @@ class RagTokenForGeneration(RagPreTrainedModel):
                 order to encourage the model to produce longer sequences.
             no_repeat_ngram_size (:obj:`int`, `optional`, defaults to 0):
                 If set to int > 0, all ngrams of that size can only occur once.
+            encoder_no_repeat_ngram_size (:obj:`int`, `optional`, defaults to 0):
+                If set to int > 0, all ngrams of that size that occur in the ``encoder_input_ids`` cannot occur in the
+                ``decoder_input_ids``.
             bad_words_ids(:obj:`List[int]`, `optional`):
                 List of token ids that are not allowed to be generated. In order to get the tokens of the words that
                 should not appear in the generated text, use :obj:`tokenizer.encode(bad_word, add_prefix_space=True)`.
             num_beams (:obj:`int`, `optional`, defaults to 1):
                 Number of beams for beam search. 1 means no beam search.
+            num_beam_groups (:obj:`int`, `optional`, defaults to 1):
+                Number of groups to divide :obj:`num_beams` into in order to ensure diversity among different groups of
+                beams. `this paper <https://arxiv.org/pdf/1610.02424.pdf>`__ for more details.
+            diversity_penalty (:obj:`float`, `optional`, defaults to 0.0):
+                This value is subtracted from a beam's score if it generates a token same as any beam from other group
+                at a particular time. Note that :obj:`diversity_penalty` is only effective if ``group beam search`` is
+                enabled.
             num_return_sequences(:obj:`int`, `optional`, defaults to 1):
                 The number of independently computed returned sequences for each element in the batch. Note that this
-                is not the value we pass to the ``generator``'s `:func:`~transformers.PreTrainedModel.generate`
-                function, where we set ``num_return_sequences`` to :obj:`num_beams`.
+                is not the value we pass to the ``generator``'s
+                `:func:`~transformers.generation_utils.GenerationMixin.generate` function, where we set
+                ``num_return_sequences`` to :obj:`num_beams`.
             decoder_start_token_id (:obj:`int`, `optional`):
                 If an encoder-decoder model starts decoding with a different token than `bos`, the id of that token.
             n_docs (:obj:`int`, `optional`, defaults to :obj:`config.n_docs`)
@@ -1317,6 +1469,15 @@ class RagTokenForGeneration(RagPreTrainedModel):
                 conditioned on the previously generated tokens :obj:`inputs_ids` and the batch ID :obj:`batch_id`. This
                 argument is useful for constrained generation conditioned on the prefix, as described in
                 `Autoregressive Entity Retrieval <https://arxiv.org/abs/2010.00904>`__.
+            forced_bos_token_id (:obj:`int`, `optional`):
+                The id of the token to force as the first generated token after the :obj:`decoder_start_token_id`.
+                Useful for multilingual models like :doc:`mBART <../model_doc/mbart>` where the first generated token
+                needs to be the target language token.
+            forced_eos_token_id (:obj:`int`, `optional`):
+                The id of the token to force as the last generated token when :obj:`max_length` is reached.
+            remove_invalid_values (:obj:`bool`, `optional`):
+                Whether to remove possible `nan` and `inf` outputs of the model to prevent the generation method to
+                crash. Note that using ``remove_invalid_values`` can slow down generation.
 
         Return:
             :obj:`torch.LongTensor` of shape :obj:`(batch_size * num_return_sequences, sequence_length)`: The generated
@@ -1326,6 +1487,7 @@ class RagTokenForGeneration(RagPreTrainedModel):
         # set default parameters
         n_docs = n_docs if n_docs is not None else self.config.n_docs
         num_beams = num_beams if num_beams is not None else self.config.num_beams
+        num_beam_groups = num_beam_groups if num_beam_groups is not None else self.config.num_beam_groups
         max_length = max_length if max_length is not None else self.config.max_length
         num_return_sequences = (
             num_return_sequences if num_return_sequences is not None else self.config.num_return_sequences
@@ -1338,6 +1500,9 @@ class RagTokenForGeneration(RagPreTrainedModel):
             decoder_start_token_id
             if decoder_start_token_id is not None
             else self.config.generator.decoder_start_token_id
+        )
+        remove_invalid_values = (
+            remove_invalid_values if remove_invalid_values is not None else self.config.remove_invalid_values
         )
 
         # retrieve docs
@@ -1374,7 +1539,7 @@ class RagTokenForGeneration(RagPreTrainedModel):
         batch_size = context_input_ids.shape[0] // n_docs
 
         encoder = self.rag.generator.get_encoder()
-        encoder_outputs = encoder(input_ids=context_input_ids, attention_mask=context_attention_mask)
+        encoder_outputs = encoder(input_ids=context_input_ids, attention_mask=context_attention_mask, return_dict=True)
 
         input_ids = torch.full(
             (batch_size * num_beams, 1),
@@ -1407,11 +1572,19 @@ class RagTokenForGeneration(RagPreTrainedModel):
         pre_processor = self._get_logits_processor(
             repetition_penalty=repetition_penalty,
             no_repeat_ngram_size=no_repeat_ngram_size,
+            encoder_no_repeat_ngram_size=encoder_no_repeat_ngram_size,
+            encoder_input_ids=context_input_ids,
             bad_words_ids=bad_words_ids,
             min_length=min_length,
+            max_length=max_length,
             eos_token_id=eos_token_id,
+            forced_bos_token_id=forced_bos_token_id,
+            forced_eos_token_id=forced_eos_token_id,
             prefix_allowed_tokens_fn=prefix_allowed_tokens_fn,
             num_beams=num_beams,
+            num_beam_groups=num_beam_groups,
+            diversity_penalty=diversity_penalty,
+            remove_invalid_values=remove_invalid_values,
         )
 
         if num_beams == 1:
@@ -1421,7 +1594,7 @@ class RagTokenForGeneration(RagPreTrainedModel):
                 )
             return self.greedy_search(
                 input_ids,
-                pre_processor=pre_processor,
+                logits_processor=pre_processor,
                 max_length=max_length,
                 pad_token_id=pad_token_id,
                 eos_token_id=eos_token_id,
@@ -1434,7 +1607,6 @@ class RagTokenForGeneration(RagPreTrainedModel):
                 raise ValueError("`num_return_sequences` has to be smaller or equal to `num_beams`.")
             beam_scorer = BeamSearchScorer(
                 batch_size=batch_size,
-                max_length=max_length,
                 num_beams=num_beams,
                 device=self.device,
                 length_penalty=length_penalty,
@@ -1444,7 +1616,7 @@ class RagTokenForGeneration(RagPreTrainedModel):
             return self.beam_search(
                 input_ids,
                 beam_scorer,
-                pre_processor=pre_processor,
+                logits_processor=pre_processor,
                 max_length=max_length,
                 pad_token_id=pad_token_id,
                 eos_token_id=eos_token_id,

@@ -1,3 +1,15 @@
+.. 
+    Copyright 2020 The HuggingFace Team. All rights reserved.
+
+    Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+    the License. You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+    an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+    specific language governing permissions and limitations under the License.
+
 RAG
 -----------------------------------------------------------------------------------------------------------------------
 
@@ -31,6 +43,7 @@ outperforming parametric seq2seq models and task-specific retrieve-and-extract a
 tasks, we find that RAG models generate more specific, diverse and factual language than a state-of-the-art
 parametric-only seq2seq baseline.*
 
+This model was contributed by `ola13 <https://huggingface.co/ola13>`__.
 
 
 RagConfig
@@ -44,7 +57,7 @@ RagTokenizer
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: transformers.RagTokenizer
-    :members: prepare_seq2seq_batch
+    :members:
 
 
 Rag specific outputs
@@ -82,3 +95,24 @@ RagTokenForGeneration
 
 .. autoclass:: transformers.RagTokenForGeneration
     :members: forward, generate
+
+
+TFRagModel
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: transformers.TFRagModel
+    :members: call
+
+
+TFRagSequenceForGeneration
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: transformers.TFRagSequenceForGeneration
+    :members: call, generate
+
+
+TFRagTokenForGeneration
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: transformers.TFRagTokenForGeneration
+    :members: call, generate

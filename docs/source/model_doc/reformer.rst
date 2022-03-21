@@ -1,3 +1,15 @@
+.. 
+    Copyright 2020 The HuggingFace Team. All rights reserved.
+
+    Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+    the License. You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+    an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+    specific language governing permissions and limitations under the License.
+
 Reformer
 -----------------------------------------------------------------------------------------------------------------------
 
@@ -20,7 +32,8 @@ layers instead of the standard residuals, which allows storing activations only 
 N times, where N is the number of layers. The resulting model, the Reformer, performs on par with Transformer models
 while being much more memory-efficient and much faster on long sequences.*
 
-The Authors' code can be found `here <https://github.com/google/trax/tree/master/trax/models/reformer>`__.
+This model was contributed by `patrickvonplaten <https://huggingface.co/patrickvonplaten>`__. The Authors' code can be
+found `here <https://github.com/google/trax/tree/master/trax/models/reformer>`__.
 
 Axial Positional Encodings
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -133,8 +146,8 @@ For training, the :class:`~transformers.ReformerModelWithLMHead` should be used 
 
 .. code-block::
 
-  input_ids = tokenizer.encode('This is a sentence from the training data', return_tensors='pt')
-  loss = model(input_ids, labels=input_ids)[0]
+    input_ids = tokenizer.encode('This is a sentence from the training data', return_tensors='pt')
+    loss = model(input_ids, labels=input_ids)[0]
 
 
 ReformerConfig
@@ -149,6 +162,13 @@ ReformerTokenizer
 
 .. autoclass:: transformers.ReformerTokenizer
     :members: save_vocabulary
+
+
+ReformerTokenizerFast
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: transformers.ReformerTokenizerFast
+    :members:
 
 
 ReformerModel

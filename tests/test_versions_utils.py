@@ -1,13 +1,24 @@
+# Copyright 2020 The HuggingFace Team. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import sys
 
-import numpy
-
-import pkg_resources
 from transformers.testing_utils import TestCasePlus
-from transformers.utils.versions import require_version, require_version_core, require_version_examples
+from transformers.utils.versions import importlib_metadata, require_version, require_version_core
 
 
-numpy_ver = numpy.__version__
+numpy_ver = importlib_metadata.version("numpy")
 python_ver = ".".join([str(x) for x in sys.version_info[:3]])
 
 
@@ -36,6 +47,9 @@ class DependencyVersionCheckTest(TestCasePlus):
         # gt
         require_version_core("numpy>1.0.0")
 
+        # mix
+        require_version_core("numpy>1.0.0,<1000")
+
         # requirement w/o version
         require_version_core("numpy")
 
@@ -43,7 +57,7 @@ class DependencyVersionCheckTest(TestCasePlus):
         for req in ["numpy==1.0.0", "numpy>=1000.0.0", f"numpy<{numpy_ver}"]:
             try:
                 require_version_core(req)
-            except pkg_resources.VersionConflict as e:
+            except ImportError as e:
                 self.assertIn(f"{req} is required", str(e))
                 self.assertIn("but found", str(e))
 
@@ -51,7 +65,7 @@ class DependencyVersionCheckTest(TestCasePlus):
         for req in ["numpipypie>1", "numpipypie2"]:
             try:
                 require_version_core(req)
-            except pkg_resources.DistributionNotFound as e:
+            except importlib_metadata.PackageNotFoundError as e:
                 self.assertIn(f"The '{req}' distribution was not found and is required by this application", str(e))
                 self.assertIn("Try: pip install transformers -U", str(e))
 
@@ -69,14 +83,6 @@ class DependencyVersionCheckTest(TestCasePlus):
             except ValueError as e:
                 self.assertIn("need one of ", str(e))
 
-    def test_examples(self):
-        # the main functionality is tested in `test_core`, this is just the hint check
-        try:
-            require_version_examples("numpy>1000.4.5")
-        except pkg_resources.VersionConflict as e:
-            self.assertIn("is required", str(e))
-            self.assertIn("pip install -r examples/requirements.txt", str(e))
-
     def test_python(self):
 
         # matching requirement
@@ -86,6 +92,6 @@ class DependencyVersionCheckTest(TestCasePlus):
         for req in ["python>9.9.9", "python<3.0.0"]:
             try:
                 require_version_core(req)
-            except pkg_resources.VersionConflict as e:
+            except ImportError as e:
                 self.assertIn(f"{req} is required", str(e))
                 self.assertIn(f"but found python=={python_ver}", str(e))

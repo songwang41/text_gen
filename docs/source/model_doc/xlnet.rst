@@ -1,3 +1,15 @@
+.. 
+    Copyright 2020 The HuggingFace Team. All rights reserved.
+
+    Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+    the License. You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+    an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+    specific language governing permissions and limitations under the License.
+
 XLNet
 -----------------------------------------------------------------------------------------------------------------------
 
@@ -29,10 +41,11 @@ Tips:
   using only a sub-set of the output tokens as target which are selected with the :obj:`target_mapping` input.
 - To use XLNet for sequential decoding (i.e. not in fully bi-directional setting), use the :obj:`perm_mask` and
   :obj:`target_mapping` inputs to control the attention span and outputs (see examples in
-  `examples/text-generation/run_generation.py`)
+  `examples/pytorch/text-generation/run_generation.py`)
 - XLNet is one of the few models that has no sequence length limit.
 
-The original code can be found `here <https://github.com/zihangdai/xlnet/>`__.
+This model was contributed by `thomwolf <https://huggingface.co/thomwolf>`__. The original code can be found `here
+<https://github.com/zihangdai/xlnet/>`__.
 
 
 XLNetConfig
@@ -48,6 +61,13 @@ XLNetTokenizer
 .. autoclass:: transformers.XLNetTokenizer
     :members: build_inputs_with_special_tokens, get_special_tokens_mask,
         create_token_type_ids_from_sequences, save_vocabulary
+
+
+XLNetTokenizerFast
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: transformers.XLNetTokenizerFast
+    :members:
 
 
 XLNet specific outputs

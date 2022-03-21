@@ -1,7 +1,22 @@
+# Copyright 2020 The HuggingFace Team. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import unittest
 
 from transformers.data.processors.squad import SquadExample
-from transformers.pipelines import Pipeline, QuestionAnsweringArgumentHandler
+from transformers.pipelines import Pipeline, QuestionAnsweringArgumentHandler, pipeline
+from transformers.testing_utils import slow
 
 from .test_pipelines_common import CustomInputPipelineCommonMixin
 
@@ -36,7 +51,35 @@ class QAPipelineTests(CustomInputPipelineCommonMixin, unittest.TestCase):
         },
     ]
 
-    def _test_pipeline(self, nlp: Pipeline):
+    def get_pipelines(self):
+        question_answering_pipelines = [
+            pipeline(
+                task=self.pipeline_task,
+                model=model,
+                tokenizer=model,
+                framework="pt",
+                **self.pipeline_loading_kwargs,
+            )
+            for model in self.small_models
+        ]
+        return question_answering_pipelines
+
+    @slow
+    def test_high_topk_small_context(self):
+        self.pipeline_running_kwargs.update({"topk": 20})
+        valid_inputs = [
+            {"question": "Where was HuggingFace founded ?", "context": "Paris"},
+        ]
+        question_answering_pipelines = self.get_pipelines()
+        output_keys = {"score", "answer", "start", "end"}
+        for question_answering_pipeline in question_answering_pipelines:
+            result = question_answering_pipeline(valid_inputs, **self.pipeline_running_kwargs)
+            self.assertIsInstance(result, dict)
+
+            for key in output_keys:
+                self.assertIn(key, result)
+
+    def _test_pipeline(self, question_answering_pipeline: Pipeline):
         output_keys = {"score", "answer", "start", "end"}
         valid_inputs = [
             {"question": "Where was HuggingFace founded ?", "context": "HuggingFace was founded in Paris."},
@@ -51,15 +94,15 @@ class QAPipelineTests(CustomInputPipelineCommonMixin, unittest.TestCase):
             {"question": "What is does with empty context ?", "context": ""},
             {"question": "What is does with empty context ?", "context": None},
         ]
-        self.assertIsNotNone(nlp)
+        self.assertIsNotNone(question_answering_pipeline)
 
-        mono_result = nlp(valid_inputs[0])
+        mono_result = question_answering_pipeline(valid_inputs[0])
         self.assertIsInstance(mono_result, dict)
 
         for key in output_keys:
             self.assertIn(key, mono_result)
 
-        multi_result = nlp(valid_inputs)
+        multi_result = question_answering_pipeline(valid_inputs)
         self.assertIsInstance(multi_result, list)
         self.assertIsInstance(multi_result[0], dict)
 
@@ -67,8 +110,8 @@ class QAPipelineTests(CustomInputPipelineCommonMixin, unittest.TestCase):
             for key in output_keys:
                 self.assertIn(key, result)
         for bad_input in invalid_inputs:
-            self.assertRaises(ValueError, nlp, bad_input)
-        self.assertRaises(ValueError, nlp, invalid_inputs)
+            self.assertRaises(ValueError, question_answering_pipeline, bad_input)
+        self.assertRaises(ValueError, question_answering_pipeline, invalid_inputs)
 
     def test_argument_handler(self):
         qa = QuestionAnsweringArgumentHandler()

@@ -1,11 +1,23 @@
+# Copyright 2020 The HuggingFace Team. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 from argparse import ArgumentParser, Namespace
 from typing import Any, List, Optional
 
-from transformers import Pipeline
-from transformers.commands import BaseTransformersCLICommand
-from transformers.pipelines import SUPPORTED_TASKS, pipeline
-
+from ..pipelines import SUPPORTED_TASKS, TASK_ALIASES, Pipeline, pipeline
 from ..utils import logging
+from . import BaseTransformersCLICommand
 
 
 try:
@@ -90,7 +102,10 @@ class ServeCommand(BaseTransformersCLICommand):
             "serve", help="CLI tool to run inference requests through REST and GraphQL endpoints."
         )
         serve_parser.add_argument(
-            "--task", type=str, choices=SUPPORTED_TASKS.keys(), help="The task to run the pipeline on"
+            "--task",
+            type=str,
+            choices=list(SUPPORTED_TASKS.keys()) + list(TASK_ALIASES.keys()),
+            help="The task to run the pipeline on",
         )
         serve_parser.add_argument("--host", type=str, default="localhost", help="Interface the server will listen on.")
         serve_parser.add_argument("--port", type=int, default=8888, help="Port the serving will listen to.")
@@ -121,7 +136,7 @@ class ServeCommand(BaseTransformersCLICommand):
                 "Or install FastAPI and unicorn separately."
             )
         else:
-            logger.info("Serving model over {}:{}".format(host, port))
+            logger.info(f"Serving model over {host}:{port}")
             self._app = FastAPI(
                 routes=[
                     APIRoute(

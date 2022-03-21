@@ -1,3 +1,15 @@
+.. 
+    Copyright 2020 The HuggingFace Team. All rights reserved.
+
+    Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+    the License. You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+    an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+    specific language governing permissions and limitations under the License.
+
 SqueezeBERT
 -----------------------------------------------------------------------------------------------------------------------
 
@@ -34,6 +46,9 @@ Tips:
   with a causal language modeling (CLM) objective are better in that regard.
 - For best results when finetuning on sequence classification tasks, it is recommended to start with the
   `squeezebert/squeezebert-mnli-headless` checkpoint.
+
+This model was contributed by `forresti <https://huggingface.co/forresti>`__.
+
 
 SqueezeBertConfig
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

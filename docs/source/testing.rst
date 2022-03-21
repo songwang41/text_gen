@@ -1,3 +1,15 @@
+..
+    Copyright 2020 The HuggingFace Team. All rights reserved.
+
+    Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+    the License. You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+    an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+    specific language governing permissions and limitations under the License.
+
 Testing
 =======================================================================================================================
 
@@ -13,25 +25,22 @@ How transformers are tested
 -----------------------------------------------------------------------------------------------------------------------
 
 1. Once a PR is submitted it gets tested with 9 CircleCi jobs. Every new commit to that PR gets retested. These jobs
-   are defined in this `config file <https://github.com/huggingface/transformers/blob/master/.circleci/config.yml>`__,
-   so that if needed you can reproduce the same environment on your machine.
+   are defined in this :prefix_link:`config file <.circleci/config.yml>`, so that if needed you can reproduce the same
+   environment on your machine.
 
    These CI jobs don't run ``@slow`` tests.
 
 2. There are 3 jobs run by `github actions <https://github.com/huggingface/transformers/actions>`__:
 
-   * `torch hub integration
-     <https://github.com/huggingface/transformers/blob/master/.github/workflows/github-torch-hub.yml>`__: checks
-     whether torch hub integration works.
+   * :prefix_link:`torch hub integration <.github/workflows/github-torch-hub.yml>`: checks whether torch hub
+     integration works.
 
-   * `self-hosted (push) <https://github.com/huggingface/transformers/blob/master/.github/workflows/self-push.yml>`__:
-     runs fast tests on GPU only on commits on ``master``. It only runs if a commit on ``master`` has updated the code
-     in one of the following folders: ``src``, ``tests``, ``.github`` (to prevent running on added model cards,
-     notebooks, etc.)
+   * :prefix_link:`self-hosted (push) <.github/workflows/self-push.yml>`: runs fast tests on GPU only on commits on
+     ``master``. It only runs if a commit on ``master`` has updated the code in one of the following folders: ``src``,
+     ``tests``, ``.github`` (to prevent running on added model cards, notebooks, etc.)
 
-   * `self-hosted runner
-     <https://github.com/huggingface/transformers/blob/master/.github/workflows/self-scheduled.yml>`__: runs normal and
-     slow tests on GPU in ``tests`` and ``examples``:
+   * :prefix_link:`self-hosted runner <.github/workflows/self-scheduled.yml>`: runs normal and slow tests on GPU in
+     ``tests`` and ``examples``:
 
    .. code-block:: bash
 
@@ -61,19 +70,19 @@ Run all:
 
 .. code-block:: console
 
-   pytest
+    pytest
 
 or:
 
 .. code-block:: bash
 
-   make test
+    make test
 
 Note that the latter is defined as:
 
 .. code-block:: bash
 
-   python -m pytest -n auto --dist=loadfile -s -v ./tests/
+    python -m pytest -n auto --dist=loadfile -s -v ./tests/
 
 which tells pytest to:
 
@@ -91,13 +100,13 @@ All tests of the test suite:
 
 .. code-block:: bash
 
-   pytest --collect-only -q
+    pytest --collect-only -q
 
 All tests of a given test file:
 
 .. code-block:: bash
 
-   pytest tests/test_optimization.py --collect-only -q
+    pytest tests/test_optimization.py --collect-only -q
 
 
 
@@ -108,7 +117,7 @@ To run an individual test module:
 
 .. code-block:: bash
 
-   pytest tests/test_logging.py
+    pytest tests/test_logging.py
 
 
 Run specific tests
@@ -119,7 +128,7 @@ class containing those tests. For example, it could be:
 
 .. code-block:: bash
 
-   pytest tests/test_optimization.py::OptimizationTest::test_adam_w
+    pytest tests/test_optimization.py::OptimizationTest::test_adam_w
 
 Here:
 
@@ -131,7 +140,7 @@ If the file contains multiple classes, you can choose to run only tests of a giv
 
 .. code-block:: bash
 
-   pytest tests/test_optimization.py::OptimizationTest
+    pytest tests/test_optimization.py::OptimizationTest
 
 
 will run all the tests inside that class.
@@ -140,8 +149,7 @@ As mentioned earlier you can see what tests are contained inside the ``Optimizat
 
 .. code-block:: bash
 
-   pytest tests/test_optimization.py::OptimizationTest --collect-only -q
-
+    pytest tests/test_optimization.py::OptimizationTest --collect-only -q
 
 You can run tests by keyword expressions.
 
@@ -149,20 +157,36 @@ To run only tests whose name contains ``adam``:
 
 .. code-block:: bash
 
-   pytest -k adam tests/test_optimization.py
+    pytest -k adam tests/test_optimization.py
+
+Logical ``and`` and ``or`` can be used to indicate whether all keywords should match or either. ``not`` can be used to
+negate.
 
 To run all tests except those whose name contains ``adam``:
 
 .. code-block:: bash
 
-   pytest -k "not adam" tests/test_optimization.py
+    pytest -k "not adam" tests/test_optimization.py
 
 And you can combine the two patterns in one:
 
+.. code-block:: bash
+
+    pytest -k "ada and not adam" tests/test_optimization.py
+
+For example to run both ``test_adafactor`` and ``test_adam_w`` you can use:
 
 .. code-block:: bash
 
-   pytest -k "ada and not adam" tests/test_optimization.py
+    pytest -k "test_adam_w or test_adam_w" tests/test_optimization.py
+
+Note that we use ``or`` here, since we want either of the keywords to match to include both.
+
+If you want to include only tests that include both patterns, ``and`` is to be used:
+
+.. code-block:: bash
+
+    pytest -k "test and ada" tests/test_optimization.py
 
 
 
@@ -227,7 +251,7 @@ example, to run all except ``test_modeling_*.py`` tests:
 
 .. code-block:: bash
 
-   pytest `ls -1 tests/*py | grep -v test_modeling`
+    pytest `ls -1 tests/*py | grep -v test_modeling`
 
 
 Clearing state
@@ -268,13 +292,13 @@ Repeat tests
 
 .. code-block:: bash
 
-   pip install pytest-flakefinder
+    pip install pytest-flakefinder
 
 And then run every test multiple times (50 by default):
 
 .. code-block:: bash
 
-   pytest --flake-finder --flake-runs=5 tests/test_failing_test.py
+    pytest --flake-finder --flake-runs=5 tests/test_failing_test.py
 
 .. note::
    This plugin doesn't work with ``-n`` flag from ``pytest-xdist``.
@@ -298,19 +322,19 @@ As explained earlier this allows detection of coupled tests - where one test's s
 
 .. code-block:: bash
 
-   pytest tests
-   [...]
-   Using --random-order-bucket=module
-   Using --random-order-seed=573663
+    pytest tests
+    [...]
+    Using --random-order-bucket=module
+    Using --random-order-seed=573663
 
 So that if the given particular sequence fails, you can reproduce it by adding that exact seed, e.g.:
 
 .. code-block:: bash
 
-   pytest --random-order-seed=573663
-   [...]
-   Using --random-order-bucket=module
-   Using --random-order-seed=573663
+    pytest --random-order-seed=573663
+    [...]
+    Using --random-order-bucket=module
+    Using --random-order-seed=573663
 
 It will only reproduce the exact order if you use the exact same list of tests (or no list at all). Once you start to
 manually narrowing down the list you can no longer rely on the seed, but have to list them manually in the exact order
@@ -318,7 +342,7 @@ they failed and tell pytest to not randomize them instead using ``--random-order
 
 .. code-block:: bash
 
-   pytest --random-order-bucket=none tests/test_a.py tests/test_c.py tests/test_b.py
+    pytest --random-order-bucket=none tests/test_a.py tests/test_c.py tests/test_b.py
 
 To disable the shuffling for all tests:
 
@@ -345,7 +369,7 @@ progressbar, and show tests that fail and the assert instantly. It gets activate
 
 .. code-block:: bash
 
-   pip install pytest-sugar
+    pip install pytest-sugar
 
 To run tests without it, run:
 
@@ -364,7 +388,7 @@ For a single or a group of tests via ``pytest`` (after ``pip install pytest-pspe
 
 .. code-block:: bash
 
-   pytest --pspec tests/test_optimization.py 
+    pytest --pspec tests/test_optimization.py
 
 
 
@@ -407,6 +431,7 @@ decorators are used to set the requirements of tests CPU/GPU/TPU-wise:
 * ``require_torch_gpu`` - as ``require_torch`` plus requires at least 1 GPU
 * ``require_torch_multi_gpu`` - as ``require_torch`` plus requires at least 2 GPUs
 * ``require_torch_non_multi_gpu`` - as ``require_torch`` plus requires 0 or 1 GPUs
+* ``require_torch_up_to_2_gpus`` - as ``require_torch`` plus requires 0 or 1 or 2 GPUs
 * ``require_torch_tpu`` - as ``require_torch`` plus requires at least 1 TPU
 
 Let's depict the GPU requirements in the following table:
@@ -422,6 +447,8 @@ Let's depict the GPU requirements in the following table:
 | ``>= 2`` | ``@require_torch_multi_gpu``     |
 +----------+----------------------------------+
 | ``< 2``  | ``@require_torch_non_multi_gpu`` |
++----------+----------------------------------+
+| ``< 3``  | ``@require_torch_up_to_2_gpus``  |
 +----------+----------------------------------+
 
 
@@ -466,8 +493,8 @@ Inside tests:
 
 .. code-block:: bash
 
-   from transformers.testing_utils import get_gpu_count
-   n_gpu = get_gpu_count() # works with torch and tf
+    from transformers.testing_utils import get_gpu_count
+    n_gpu = get_gpu_count() # works with torch and tf
 
 
 
@@ -478,23 +505,18 @@ Distributed training
 thing and end up thinking they are ``pytest`` and start running the test suite in loops. It works, however, if one
 spawns a normal process that then spawns off multiple workers and manages the IO pipes.
 
-This is still under development but you can study 2 different tests that perform this successfully:
+Here are some tests that use it:
 
-* `test_seq2seq_examples_multi_gpu.py
-  <https://github.com/huggingface/transformers/blob/master/examples/seq2seq/test_seq2seq_examples_multi_gpu.py>`__ - a
-  ``pytorch-lightning``-running test (had to use PL's ``ddp`` spawning method which is the default)
-* `test_finetune_trainer.py
-  <https://github.com/huggingface/transformers/blob/master/examples/seq2seq/test_finetune_trainer.py>`__ - a normal
-  (non-PL) test
+* :prefix_link:`test_trainer_distributed.py <tests/test_trainer_distributed.py>`
+* :prefix_link:`test_deepspeed.py <tests/deepspeed/test_deepspeed.py>`
 
-To jump right into the execution point, search for the ``execute_subprocess_async`` function in those tests.
+To jump right into the execution point, search for the ``execute_subprocess_async`` call in those tests.
 
 You will need at least 2 GPUs to see these tests in action:
 
 .. code-block:: bash
 
-   CUDA_VISIBLE_DEVICES="0,1" RUN_SLOW=1 pytest -sv examples/seq2seq/test_finetune_trainer.py \
-   examples/seq2seq/test_seq2seq_examples_multi_gpu.py
+    CUDA_VISIBLE_DEVICES=0,1 RUN_SLOW=1 pytest -sv tests/test_trainer_distributed.py
 
 
 Output capture
@@ -507,13 +529,13 @@ To disable output capturing and to get the ``stdout`` and ``stderr`` normally, u
 
 .. code-block:: bash
 
-   pytest -s tests/test_logging.py
+    pytest -s tests/test_logging.py
 
 To send test results to JUnit format output:
 
 .. code-block:: bash
 
-   py.test tests --junitxml=result.xml
+    py.test tests --junitxml=result.xml
 
 
 Color control
@@ -523,7 +545,7 @@ To have no color (e.g., yellow on white background is not readable):
 
 .. code-block:: bash
 
-   pytest --color=no tests/test_logging.py
+    pytest --color=no tests/test_logging.py
 
 
 
@@ -534,7 +556,7 @@ Creating a URL for each test failure:
 
 .. code-block:: bash
 
-   pytest --pastebin=failed tests/test_logging.py
+    pytest --pastebin=failed tests/test_logging.py
 
 This will submit test run information to a remote Paste service and provide a URL for each failure. You may select
 tests as usual or add for example -x if you only want to send one particular failure.
@@ -543,7 +565,7 @@ Creating a URL for a whole test session log:
 
 .. code-block:: bash
 
-   pytest --pastebin=all tests/test_logging.py
+    pytest --pastebin=all tests/test_logging.py
 
 
 
@@ -585,13 +607,13 @@ and you could run just the ``negative`` and ``integer`` sets of params with:
 
 .. code-block:: bash
 
-   pytest -k "negative and integer" tests/test_mytest.py
+    pytest -k "negative and integer" tests/test_mytest.py
 
 or all but ``negative`` sub-tests, with:
 
 .. code-block:: bash
 
-   pytest -k "not negative" tests/test_mytest.py
+    pytest -k "not negative" tests/test_mytest.py
 
 Besides using the ``-k`` filter that was just mentioned, you can find out the exact name of each sub-test and run any
 or all of them using their exact names.
@@ -651,7 +673,7 @@ and it will list:
 
     test_this2.py::test_floor[integer-1-1.0]
     test_this2.py::test_floor[negative--1.5--2.0]
-    test_this2.py::test_floor[large fraction-1.6-1]       
+    test_this2.py::test_floor[large fraction-1.6-1]
 
 So now you can run just the specific test:
 
@@ -697,10 +719,10 @@ To start using those all you need is to make sure that the test resides in a sub
     from transformers.testing_utils import TestCasePlus
     class PathExampleTest(TestCasePlus):
         def test_something_involving_local_locations(self):
-            data_dir = self.examples_dir / "seq2seq/test_data/wmt_en_ro"
+            data_dir = self.tests_dir / "fixtures/tests_samples/wmt_en_ro"
 
-If you don't need to manipulated paths via ``pathlib`` or you just need a path as a string, you can always invoked
-``str()`` on the ``pathlib`` oboject or use the accessors ending with ``_str``. For example:
+If you don't need to manipulate paths via ``pathlib`` or you just need a path as a string, you can always invoked
+``str()`` on the ``pathlib`` object or use the accessors ending with ``_str``. For example:
 
 .. code-block:: python
 
@@ -772,6 +794,23 @@ leave any data in there.
 .. note::
    Each test can register multiple temporary directories and they all will get auto-removed, unless requested
    otherwise.
+
+
+Temporary sys.path override
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If you need to temporary override ``sys.path`` to import from another test for example, you can use the
+``ExtendSysPath`` context manager. Example:
+
+
+.. code-block:: python
+
+    import os
+    from transformers.testing_utils import ExtendSysPath
+    bindir = os.path.abspath(os.path.dirname(__file__))
+    with ExtendSysPath(f"{bindir}/.."):
+        from test_trainer import TrainerIntegrationCommon  # noqa
+
 
 
 Skipping tests
@@ -928,10 +967,9 @@ slow models to do qualitative testing. To see the use of these simply look for *
 
     grep tiny tests examples
 
-Here is a an example of a `script
-<https://github.com/huggingface/transformers/blob/master/scripts/fsmt/fsmt-make-tiny-model.py>`__ that created the tiny
-model `stas/tiny-wmt19-en-de <https://huggingface.co/stas/tiny-wmt19-en-de>`__. You can easily adjust it to your
-specific model's architecture.
+Here is a an example of a :prefix_link:`script <scripts/fsmt/fsmt-make-tiny-model.py>` that created the tiny model
+`stas/tiny-wmt19-en-de <https://huggingface.co/stas/tiny-wmt19-en-de>`__. You can easily adjust it to your specific
+model's architecture.
 
 It's easy to measure the run-time incorrectly if for example there is an overheard of downloading a huge model, but if
 you test it locally the downloaded files would be cached and thus the download time not measured. Hence check the
@@ -1130,3 +1168,66 @@ To start a debugger at the point of the warning, do this:
 .. code-block:: bash
 
     pytest tests/test_logging.py -W error::UserWarning --pdb
+
+
+
+Testing Experimental CI Features
+-----------------------------------------------------------------------------------------------------------------------
+
+Testing CI features can be potentially problematic as it can interfere with the normal CI functioning. Therefore if a
+new CI feature is to be added, it should be done as following.
+
+1. Create a new dedicated job that tests what needs to be tested
+2. The new job must always succeed so that it gives us a green ✓ (details below).
+3. Let it run for some days to see that a variety of different PR types get to run on it (user fork branches,
+   non-forked branches, branches originating from github.com UI direct file edit, various forced pushes, etc. - there
+   are so many) while monitoring the experimental job's logs (not the overall job green as it's purposefully always
+   green)
+4. When it's clear that everything is solid, then merge the new changes into existing jobs.
+
+That way experiments on CI functionality itself won't interfere with the normal workflow.
+
+Now how can we make the job always succeed while the new CI feature is being developed?
+
+Some CIs, like TravisCI support ignore-step-failure and will report the overall job as successful, but CircleCI and
+Github Actions as of this writing don't support that.
+
+So the following workaround can be used:
+
+1. ``set +euo pipefail`` at the beginning of the run command to suppress most potential failures in the bash script.
+2. the last command must be a success: ``echo "done"`` or just ``true`` will do
+
+Here is an example:
+
+.. code-block:: yaml
+
+    - run:
+        name: run CI experiment
+        command: |
+            set +euo pipefail
+            echo "setting run-all-despite-any-errors-mode"
+            this_command_will_fail
+            echo "but bash continues to run"
+            # emulate another failure
+            false
+            # but the last command must be a success
+            echo "during experiment do not remove: reporting success to CI, even if there were failures"
+
+For simple commands you could also do:
+
+.. code-block:: bash
+
+    cmd_that_may_fail || true
+
+Of course, once satisfied with the results, integrate the experimental step or job with the rest of the normal jobs,
+while removing ``set +euo pipefail`` or any other things you may have added to ensure that the experimental job doesn't
+interfere with the normal CI functioning.
+
+This whole process would have been much easier if we only could set something like ``allow-failure`` for the
+experimental step, and let it fail without impacting the overall status of PRs. But as mentioned earlier CircleCI and
+Github Actions don't support it at the moment.
+
+You can vote for this feature and see where it is at at these CI-specific threads:
+
+* `Github Actions: <https://github.com/actions/toolkit/issues/399>`__
+* `CircleCI: <https://ideas.circleci.com/ideas/CCI-I-344>`__

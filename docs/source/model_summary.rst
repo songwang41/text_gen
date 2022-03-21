@@ -1,10 +1,22 @@
+.. 
+    Copyright 2020 The HuggingFace Team. All rights reserved.
+
+    Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+    the License. You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+    an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+    specific language governing permissions and limitations under the License.
+
 Summary of the models
 =======================================================================================================================
 
 This is a summary of the models available in 🤗 Transformers. It assumes you’re familiar with the original `transformer
 model <https://arxiv.org/abs/1706.03762>`_. For a gentle introduction check the `annotated transformer
 <http://nlp.seas.harvard.edu/2018/04/03/attention.html>`_. Here we focus on the high-level differences between the
-models. You can check them more in detail in their respective documentation. Also checkout the :doc:`pretrained model
+models. You can check them more in detail in their respective documentation. Also check out the :doc:`pretrained model
 page </pretrained_models>` to see the checkpoints available for each type of model and all `the community models
 <https://huggingface.co/models>`_.
 
@@ -16,9 +28,15 @@ Each one of the models in the library falls into one of the following categories
   * :ref:`multimodal-models`
   * :ref:`retrieval-based-models`
 
+.. raw:: html
+
+   <iframe width="560" height="315" src="https://www.youtube.com/embed/H39Z_720T5s" title="YouTube video player"
+   frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope;
+   picture-in-picture" allowfullscreen></iframe>
+
 Autoregressive models are pretrained on the classic language modeling task: guess the next token having read all the
 previous ones. They correspond to the decoder of the original transformer model, and a mask is used on top of the full
-sentence so that the attention heads can only see what was before in the next, and not what’s after. Although those
+sentence so that the attention heads can only see what was before in the text, and not what’s after. Although those
 models can be fine-tuned and achieve great results on many tasks, the most natural application is text generation. A
 typical example of such models is GPT.
 
@@ -42,11 +60,17 @@ Multimodal models mix text inputs with other kinds (e.g. images) and are more sp
 
 .. _autoregressive-models:
 
-Autoregressive models
+Decoders or autoregressive models
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 As mentioned before, these models rely on the decoder part of the original transformer and use an attention mask so
 that at each position, the model can only look at the tokens before the attention heads.
+
+.. raw:: html
+
+   <iframe width="560" height="315" src="https://www.youtube.com/embed/d_ixlCubqQw" title="YouTube video player"
+   frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope;
+   picture-in-picture" allowfullscreen></iframe>
 
 Original GPT
 -----------------------------------------------------------------------------------------------------------------------
@@ -203,12 +227,18 @@ multiple choice classification and question answering.
 
 .. _autoencoding-models:
 
-Autoencoding models
+Encoders or autoencoding models
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 As mentioned before, these models rely on the encoder part of the original transformer and use no mask so the model can
 look at all the tokens in the attention heads. For pretraining, targets are the original sentences and inputs are their
 corrupted versions.
+
+.. raw:: html
+
+   <iframe width="560" height="315" src="https://www.youtube.com/embed/MUqNwgPjJvQ" title="YouTube video player"
+   frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope;
+   picture-in-picture" allowfullscreen></iframe>
 
 BERT
 -----------------------------------------------------------------------------------------------------------------------
@@ -314,6 +344,36 @@ the same probabilities as the larger model. The actual objective is a combinatio
   * finding the same probabilities as the teacher model
   * predicting the masked tokens correctly (but no next-sentence objective)
   * a cosine similarity between the hidden states of the student and the teacher model
+
+The library provides a version of the model for masked language modeling, token classification, sentence classification
+and question answering.
+
+ConvBERT
+-----------------------------------------------------------------------------------------------------------------------
+
+.. raw:: html
+
+   <a href="https://huggingface.co/models?filter=convbert">
+       <img alt="Models" src="https://img.shields.io/badge/All_model_pages-convbert-blueviolet">
+   </a>
+   <a href="model_doc/convbert.html">
+       <img alt="Doc" src="https://img.shields.io/badge/Model_documentation-convbert-blueviolet">
+   </a>
+
+`ConvBERT: Improving BERT with Span-based Dynamic Convolution <https://arxiv.org/abs/1910.01108>`_, Zihang Jiang,
+Weihao Yu, Daquan Zhou, Yunpeng Chen, Jiashi Feng, Shuicheng Yan.
+
+Pre-trained language models like BERT and its variants have recently achieved impressive performance in various natural
+language understanding tasks. However, BERT heavily relies on the global self-attention block and thus suffers large
+memory footprint and computation cost. Although all its attention heads query on the whole input sequence for
+generating the attention map from a global perspective, we observe some heads only need to learn local dependencies,
+which means the existence of computation redundancy. We therefore propose a novel span-based dynamic convolution to
+replace these self-attention heads to directly model local dependencies. The novel convolution heads, together with the
+rest self-attention heads, form a new mixed attention block that is more efficient at both global and local context
+learning. We equip BERT with this mixed attention design and build a ConvBERT model. Experiments have shown that
+ConvBERT significantly outperforms BERT and its variants in various downstream tasks, with lower training cost and
+fewer model parameters. Remarkably, ConvBERTbase model achieves 86.4 GLUE score, 0.7 higher than ELECTRAbase, while
+using less than 1/4 training cost.
 
 The library provides a version of the model for masked language modeling, token classification, sentence classification
 and question answering.
@@ -484,6 +544,12 @@ Sequence-to-sequence models
 
 As mentioned before, these models keep both the encoder and the decoder of the original transformer.
 
+.. raw:: html
+
+   <iframe width="560" height="315" src="https://www.youtube.com/embed/0_4KEb08xrE" title="YouTube video player"
+   frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope;
+   picture-in-picture" allowfullscreen></iframe>
+
 BART
 -----------------------------------------------------------------------------------------------------------------------
 
@@ -500,8 +566,8 @@ BART
 <https://arxiv.org/abs/1910.13461>`_, Mike Lewis et al.
 
 Sequence-to-sequence model with an encoder and a decoder. Encoder is fed a corrupted version of the tokens, decoder is
-fed the original tokens (but has a mask to hide the future words like a regular transformers decoder). For the encoder
-, on the pretraining tasks, a composition of the following transformations are applied:
+fed the original tokens (but has a mask to hide the future words like a regular transformers decoder). A composition of
+the following transformations are applied on the pretraining tasks for the encoder:
 
   * mask random tokens (like in BERT)
   * delete random tokens
@@ -640,7 +706,8 @@ The `mbart-large-en-ro checkpoint <https://huggingface.co/facebook/mbart-large-e
 romanian translation.
 
 The `mbart-large-cc25 <https://huggingface.co/facebook/mbart-large-cc25>`_ checkpoint can be finetuned for other
-translation and summarization tasks, using code in ```examples/seq2seq/``` , but is not very useful without finetuning.
+translation and summarization tasks, using code in ```examples/pytorch/translation/``` , but is not very useful without
+finetuning.
 
 
 ProphetNet

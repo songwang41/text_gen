@@ -1,5 +1,5 @@
 # coding=utf-8
-# Copyright 2018 The Google AI Language Team Authors.
+# Copyright 2020 The HuggingFace Team. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -526,6 +526,7 @@ class XLNetModelTest(ModelTesterMixin, GenerationTesterMixin, unittest.TestCase)
         (XLNetLMHeadModel,) if is_torch_available() else ()
     )  # TODO (PVP): Check other models whether language generation is also applicable
     test_pruning = False
+    test_sequence_classification_problem_types = True
 
     # XLNet has 2 QA models -> need to manually set the correct labels for one of them here
     def _prepare_for_class(self, inputs_dict, model_class, return_labels=False):
@@ -592,6 +593,72 @@ class XLNetModelTest(ModelTesterMixin, GenerationTesterMixin, unittest.TestCase)
     def test_retain_grad_hidden_states_attentions(self):
         # xlnet cannot keep gradients in attentions or hidden states
         return
+
+    # overwrite from test_modeling_common
+    def _mock_init_weights(self, module):
+        if hasattr(module, "weight") and module.weight is not None:
+            module.weight.data.fill_(3)
+        if hasattr(module, "bias") and module.bias is not None:
+            module.bias.data.fill_(3)
+
+        for param in ["q", "k", "v", "o", "r", "r_r_bias", "r_s_bias", "r_w_bias", "seg_embed", "mask_emb"]:
+            if hasattr(module, param) and getattr(module, param) is not None:
+                weight = getattr(module, param)
+                weight.data.fill_(3)
+
+    def _check_hidden_states_for_generate(
+        self, batch_size, hidden_states, min_length, max_length, config, use_cache=False, num_beam_groups=1
+    ):
+        self.assertIsInstance(hidden_states, tuple)
+        self.assertListEqual(
+            [isinstance(iter_hidden_states, tuple) for iter_hidden_states in hidden_states],
+            [True] * len(hidden_states),
+        )
+        self.assertEqual(len(hidden_states), (max_length - min_length) * num_beam_groups)
+
+        for idx, iter_hidden_states in enumerate(hidden_states):
+            # check hidden size
+            for i, layer_hidden_states in enumerate(iter_hidden_states):
+                # every 2nd tensor is from extra stream
+                if i % 2 != 0:
+                    seq_len = 1
+                else:
+                    # for first item dummy PAD token is appended so need one more
+                    seq_len = (min_length + 1) if idx == 0 else min_length
+
+                expected_shape = (batch_size * num_beam_groups, seq_len, config.hidden_size)
+                self.assertEqual(layer_hidden_states.shape, expected_shape)
+
+    def _check_attentions_for_generate(
+        self, batch_size, attentions, min_length, max_length, config, use_cache=False, num_beam_groups=1
+    ):
+        self.assertIsInstance(attentions, tuple)
+        self.assertListEqual(
+            [isinstance(iter_attentions, tuple) for iter_attentions in attentions], [True] * len(attentions)
+        )
+        self.assertEqual(len(attentions), (max_length - min_length) * num_beam_groups)
+
+        for idx, attentions_item in enumerate(attentions):
+            for iter_attentions in attentions_item:
+                tgt_len = min_length
+
+                # for first item dummy PAD token is appended so need one more
+                if idx == 0:
+                    tgt_len += 1
+
+                src_len = min_length + idx + 1
+
+                expected_shape = (
+                    batch_size * num_beam_groups,
+                    config.num_attention_heads,
+                    tgt_len,
+                    src_len,
+                )
+                # check attn size
+                self.assertListEqual(
+                    [layer_attention.shape for layer_attention in iter_attentions],
+                    [expected_shape] * len(iter_attentions),
+                )
 
     @slow
     def test_model_from_pretrained(self):

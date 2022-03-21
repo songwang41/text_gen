@@ -1,3 +1,15 @@
+.. 
+    Copyright 2020 The HuggingFace Team. All rights reserved.
+
+    Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+    the License. You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+    an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+    specific language governing permissions and limitations under the License.
+
 ALBERT
 -----------------------------------------------------------------------------------------------------------------------
 
@@ -31,7 +43,8 @@ Tips:
   similar to a BERT-like architecture with the same number of hidden layers as it has to iterate through the same
   number of (repeating) layers.
 
-The original code can be found `here <https://github.com/google-research/ALBERT>`__.
+This model was contributed by `lysandre <https://huggingface.co/lysandre>`__. The original code can be found `here
+<https://github.com/google-research/ALBERT>`__.
 
 AlbertConfig
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -46,6 +59,13 @@ AlbertTokenizer
 .. autoclass:: transformers.AlbertTokenizer
     :members: build_inputs_with_special_tokens, get_special_tokens_mask,
         create_token_type_ids_from_sequences, save_vocabulary
+
+
+AlbertTokenizerFast
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: transformers.AlbertTokenizerFast
+    :members:
 
 
 Albert specific outputs

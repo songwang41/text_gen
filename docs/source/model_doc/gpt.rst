@@ -1,3 +1,15 @@
+.. 
+    Copyright 2020 The HuggingFace Team. All rights reserved.
+
+    Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+    the License. You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+    an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+    specific language governing permissions and limitations under the License.
+
 OpenAI GPT
 -----------------------------------------------------------------------------------------------------------------------
 
@@ -33,12 +45,13 @@ Tips:
 `Write With Transformer <https://transformer.huggingface.co/doc/gpt>`__ is a webapp created and hosted by Hugging Face
 showcasing the generative capabilities of several models. GPT is one of them.
 
-The original code can be found `here <https://github.com/openai/finetune-transformer-lm>`__.
+This model was contributed by `thomwolf <https://huggingface.co/thomwolf>`__. The original code can be found `here
+<https://github.com/openai/finetune-transformer-lm>`__.
 
 Note:
 
 If you want to reproduce the original tokenization process of the `OpenAI GPT` paper, you will need to install ``ftfy``
-and ``SpaCy``::
+and ``SpaCy``:
 
 .. code-block:: bash
 
@@ -125,4 +138,10 @@ TFOpenAIGPTDoubleHeadsModel
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: transformers.TFOpenAIGPTDoubleHeadsModel
+    :members: call
+
+TFOpenAIGPTForSequenceClassification
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: transformers.TFOpenAIGPTForSequenceClassification
     :members: call

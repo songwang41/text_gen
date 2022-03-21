@@ -1,3 +1,17 @@
+# Copyright 2020 The HuggingFace Team. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import argparse
 import json
 import os
@@ -10,6 +24,7 @@ from zipfile import ZipFile
 
 import numpy as np
 import torch
+from torch import nn
 from tqdm import tqdm
 
 from transformers import MarianConfig, MarianMTModel, MarianTokenizer
@@ -39,7 +54,7 @@ def convert_encoder_layer(opus_dict, layer_prefix: str, converter: dict):
     return sd
 
 
-def load_layers_(layer_lst: torch.nn.ModuleList, opus_state: dict, converter, is_decoder=False):
+def load_layers_(layer_lst: nn.ModuleList, opus_state: dict, converter, is_decoder=False):
     for i, layer in enumerate(layer_lst):
         layer_tag = f"decoder_l{i + 1}_" if is_decoder else f"encoder_l{i + 1}_"
         sd = convert_encoder_layer(opus_state, layer_tag, converter)
@@ -529,8 +544,8 @@ class OpusState:
         load_layers_(model.model.decoder.layers, state_dict, BART_CONVERTER, is_decoder=True)
 
         # handle tensors not associated with layers
-        wemb_tensor = torch.nn.Parameter(torch.FloatTensor(self.wemb))
-        bias_tensor = torch.nn.Parameter(torch.FloatTensor(self.final_bias))
+        wemb_tensor = nn.Parameter(torch.FloatTensor(self.wemb))
+        bias_tensor = nn.Parameter(torch.FloatTensor(self.final_bias))
         model.model.shared.weight = wemb_tensor
         model.model.encoder.embed_tokens = model.model.decoder.embed_tokens = model.model.shared
 

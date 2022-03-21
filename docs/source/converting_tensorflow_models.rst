@@ -1,3 +1,15 @@
+.. 
+    Copyright 2020 The HuggingFace Team. All rights reserved.
+
+    Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+    the License. You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+    an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+    specific language governing permissions and limitations under the License.
+
 Converting Tensorflow Checkpoints
 =======================================================================================================================
 
@@ -15,19 +27,14 @@ BERT
 
 You can convert any TensorFlow checkpoint for BERT (in particular `the pre-trained models released by Google
 <https://github.com/google-research/bert#pre-trained-models>`_\ ) in a PyTorch save file by using the
-`convert_bert_original_tf_checkpoint_to_pytorch.py
-<https://github.com/huggingface/transformers/blob/master/src/transformers/convert_bert_original_tf_checkpoint_to_pytorch.py>`_
-script.
+:prefix_link:`convert_bert_original_tf_checkpoint_to_pytorch.py
+<src/transformers/models/bert/convert_bert_original_tf_checkpoint_to_pytorch.py>` script.
 
 This CLI takes as input a TensorFlow checkpoint (three files starting with ``bert_model.ckpt``\ ) and the associated
 configuration file (\ ``bert_config.json``\ ), and creates a PyTorch model for this configuration, loads the weights
 from the TensorFlow checkpoint in the PyTorch model and saves the resulting model in a standard PyTorch save file that
-can be imported using ``torch.load()`` (see examples in `run_bert_extract_features.py
-<https://github.com/huggingface/pytorch-pretrained-BERT/tree/master/examples/run_bert_extract_features.py>`_\ ,
-`run_bert_classifier.py
-<https://github.com/huggingface/pytorch-pretrained-BERT/tree/master/examples/run_bert_classifier.py>`_ and
-`run_bert_squad.py <https://github.com/huggingface/pytorch-pretrained-BERT/tree/master/examples/run_bert_squad.py>`_\
-).
+can be imported using ``from_pretrained()`` (see example in :doc:`quicktour` , :prefix_link:`run_glue.py
+<examples/pytorch/text-classification/run_glue.py>` \ ).
 
 You only need to run this conversion script **once** to get a PyTorch model. You can then disregard the TensorFlow
 checkpoint (the three files starting with ``bert_model.ckpt``\ ) but be sure to keep the configuration file (\
@@ -40,12 +47,12 @@ Here is an example of the conversion process for a pre-trained ``BERT-Base Uncas
 
 .. code-block:: shell
 
-   export BERT_BASE_DIR=/path/to/bert/uncased_L-12_H-768_A-12
+    export BERT_BASE_DIR=/path/to/bert/uncased_L-12_H-768_A-12
 
-   transformers-cli convert --model_type bert \
-     --tf_checkpoint $BERT_BASE_DIR/bert_model.ckpt \
-     --config $BERT_BASE_DIR/bert_config.json \
-     --pytorch_dump_output $BERT_BASE_DIR/pytorch_model.bin
+    transformers-cli convert --model_type bert \
+      --tf_checkpoint $BERT_BASE_DIR/bert_model.ckpt \
+      --config $BERT_BASE_DIR/bert_config.json \
+      --pytorch_dump_output $BERT_BASE_DIR/pytorch_model.bin
 
 You can download Google's pre-trained models for the conversion `here
 <https://github.com/google-research/bert#pre-trained-models>`__.
@@ -54,9 +61,8 @@ ALBERT
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Convert TensorFlow model checkpoints of ALBERT to PyTorch using the
-`convert_albert_original_tf_checkpoint_to_pytorch.py
-<https://github.com/huggingface/transformers/blob/master/src/transformers/convert_bert_original_tf_checkpoint_to_pytorch.py>`_
-script.
+:prefix_link:`convert_albert_original_tf_checkpoint_to_pytorch.py
+<src/transformers/models/albert/convert_albert_original_tf_checkpoint_to_pytorch.py>` script.
 
 The CLI takes as input a TensorFlow checkpoint (three files starting with ``model.ckpt-best``\ ) and the accompanying
 configuration file (\ ``albert_config.json``\ ), then creates and saves a PyTorch model. To run this conversion you
@@ -66,12 +72,12 @@ Here is an example of the conversion process for the pre-trained ``ALBERT Base``
 
 .. code-block:: shell
 
-   export ALBERT_BASE_DIR=/path/to/albert/albert_base
+    export ALBERT_BASE_DIR=/path/to/albert/albert_base
 
-   transformers-cli convert --model_type albert \
-     --tf_checkpoint $ALBERT_BASE_DIR/model.ckpt-best \
-     --config $ALBERT_BASE_DIR/albert_config.json \
-     --pytorch_dump_output $ALBERT_BASE_DIR/pytorch_model.bin
+    transformers-cli convert --model_type albert \
+      --tf_checkpoint $ALBERT_BASE_DIR/model.ckpt-best \
+      --config $ALBERT_BASE_DIR/albert_config.json \
+      --pytorch_dump_output $ALBERT_BASE_DIR/pytorch_model.bin
 
 You can download Google's pre-trained models for the conversion `here
 <https://github.com/google-research/albert#pre-trained-models>`__.
@@ -85,13 +91,13 @@ save as the same format than OpenAI pretrained model (see `here <https://github.
 
 .. code-block:: shell
 
-   export OPENAI_GPT_CHECKPOINT_FOLDER_PATH=/path/to/openai/pretrained/numpy/weights
+    export OPENAI_GPT_CHECKPOINT_FOLDER_PATH=/path/to/openai/pretrained/numpy/weights
 
-   transformers-cli convert --model_type gpt \
-     --tf_checkpoint $OPENAI_GPT_CHECKPOINT_FOLDER_PATH \
-     --pytorch_dump_output $PYTORCH_DUMP_OUTPUT \
-     [--config OPENAI_GPT_CONFIG] \
-     [--finetuning_task_name OPENAI_GPT_FINETUNED_TASK] \
+    transformers-cli convert --model_type gpt \
+      --tf_checkpoint $OPENAI_GPT_CHECKPOINT_FOLDER_PATH \
+      --pytorch_dump_output $PYTORCH_DUMP_OUTPUT \
+      [--config OPENAI_GPT_CONFIG] \
+      [--finetuning_task_name OPENAI_GPT_FINETUNED_TASK] \
 
 
 OpenAI GPT-2
@@ -102,13 +108,13 @@ Here is an example of the conversion process for a pre-trained OpenAI GPT-2 mode
 
 .. code-block:: shell
 
-   export OPENAI_GPT2_CHECKPOINT_PATH=/path/to/gpt2/pretrained/weights
+    export OPENAI_GPT2_CHECKPOINT_PATH=/path/to/gpt2/pretrained/weights
 
-   transformers-cli convert --model_type gpt2 \
-     --tf_checkpoint $OPENAI_GPT2_CHECKPOINT_PATH \
-     --pytorch_dump_output $PYTORCH_DUMP_OUTPUT \
-     [--config OPENAI_GPT2_CONFIG] \
-     [--finetuning_task_name OPENAI_GPT2_FINETUNED_TASK]
+    transformers-cli convert --model_type gpt2 \
+      --tf_checkpoint $OPENAI_GPT2_CHECKPOINT_PATH \
+      --pytorch_dump_output $PYTORCH_DUMP_OUTPUT \
+      [--config OPENAI_GPT2_CONFIG] \
+      [--finetuning_task_name OPENAI_GPT2_FINETUNED_TASK]
 
 Transformer-XL
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -118,13 +124,13 @@ Here is an example of the conversion process for a pre-trained Transformer-XL mo
 
 .. code-block:: shell
 
-   export TRANSFO_XL_CHECKPOINT_FOLDER_PATH=/path/to/transfo/xl/checkpoint
+    export TRANSFO_XL_CHECKPOINT_FOLDER_PATH=/path/to/transfo/xl/checkpoint
 
-   transformers-cli convert --model_type transfo_xl \
-     --tf_checkpoint $TRANSFO_XL_CHECKPOINT_FOLDER_PATH \
-     --pytorch_dump_output $PYTORCH_DUMP_OUTPUT \
-     [--config TRANSFO_XL_CONFIG] \
-     [--finetuning_task_name TRANSFO_XL_FINETUNED_TASK]
+    transformers-cli convert --model_type transfo_xl \
+      --tf_checkpoint $TRANSFO_XL_CHECKPOINT_FOLDER_PATH \
+      --pytorch_dump_output $PYTORCH_DUMP_OUTPUT \
+      [--config TRANSFO_XL_CONFIG] \
+      [--finetuning_task_name TRANSFO_XL_FINETUNED_TASK]
 
 
 XLNet
@@ -134,14 +140,14 @@ Here is an example of the conversion process for a pre-trained XLNet model:
 
 .. code-block:: shell
 
-   export TRANSFO_XL_CHECKPOINT_PATH=/path/to/xlnet/checkpoint
-   export TRANSFO_XL_CONFIG_PATH=/path/to/xlnet/config
+    export TRANSFO_XL_CHECKPOINT_PATH=/path/to/xlnet/checkpoint
+    export TRANSFO_XL_CONFIG_PATH=/path/to/xlnet/config
 
-   transformers-cli convert --model_type xlnet \
-     --tf_checkpoint $TRANSFO_XL_CHECKPOINT_PATH \
-     --config $TRANSFO_XL_CONFIG_PATH \
-     --pytorch_dump_output $PYTORCH_DUMP_OUTPUT \
-     [--finetuning_task_name XLNET_FINETUNED_TASK] \
+    transformers-cli convert --model_type xlnet \
+      --tf_checkpoint $TRANSFO_XL_CHECKPOINT_PATH \
+      --config $TRANSFO_XL_CONFIG_PATH \
+      --pytorch_dump_output $PYTORCH_DUMP_OUTPUT \
+      [--finetuning_task_name XLNET_FINETUNED_TASK] \
 
 
 XLM
@@ -151,10 +157,25 @@ Here is an example of the conversion process for a pre-trained XLM model:
 
 .. code-block:: shell
 
-   export XLM_CHECKPOINT_PATH=/path/to/xlm/checkpoint
+    export XLM_CHECKPOINT_PATH=/path/to/xlm/checkpoint
 
-   transformers-cli convert --model_type xlm \
-     --tf_checkpoint $XLM_CHECKPOINT_PATH \
-     --pytorch_dump_output $PYTORCH_DUMP_OUTPUT
-    [--config XML_CONFIG] \
-    [--finetuning_task_name XML_FINETUNED_TASK]
+    transformers-cli convert --model_type xlm \
+      --tf_checkpoint $XLM_CHECKPOINT_PATH \
+      --pytorch_dump_output $PYTORCH_DUMP_OUTPUT
+     [--config XML_CONFIG] \
+     [--finetuning_task_name XML_FINETUNED_TASK]
+
+
+T5
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Here is an example of the conversion process for a pre-trained T5 model:
+
+.. code-block:: shell
+
+    export T5=/path/to/t5/uncased_L-12_H-768_A-12
+
+    transformers-cli convert --model_type t5 \
+      --tf_checkpoint $T5/t5_model.ckpt \
+      --config $T5/t5_config.json \
+      --pytorch_dump_output $T5/pytorch_model.bin
