@@ -373,7 +373,7 @@ class TranslationModule(SummarizationModule):
 
 
 def main(args, model=None) -> SummarizationModule:
-    Path(args.output_dir).mkdir(exist_ok=True)
+    os.makedirs(Path(args.output_dir), exist_ok=True)
     check_output_dir(args, expected_items=3)
 
     if model is None:
