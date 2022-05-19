@@ -7,3 +7,4 @@ rouge-score==0.0.4
 sacrebleu==1.4.13 
 ruamel.yaml==0.16.12
 sentencepiece==0.1.96
+#azureml-sdk==1.18.0
