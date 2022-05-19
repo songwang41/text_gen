@@ -306,6 +306,7 @@ class BartEncoder(nn.Module):
 
         self.dropout = config.dropout
         self.layerdrop = config.encoder_layerdrop
+        self.d_model=config.d_model
 
         embed_dim = embed_tokens.embedding_dim
         self.embed_scale = math.sqrt(embed_dim) if config.scale_embedding else 1.0
@@ -362,7 +363,8 @@ class BartEncoder(nn.Module):
 
         encoder_states = () if output_hidden_states else None
         all_attentions = () if output_attentions else None
-        for encoder_layer in self.layers:
+        pooled_hidden_states = torch.zeros(len(self.layers), x.shape[0], self.d_model)
+        for idx, encoder_layer in enumerate(self.layers):
             if output_hidden_states:
                 x = x.transpose(0, 1)  # T x B x C -> B x T x C
                 encoder_states = encoder_states + (x,)
@@ -376,6 +378,10 @@ class BartEncoder(nn.Module):
 
             if output_attentions:
                 all_attentions = all_attentions + (attn,)
+            
+            x = x.transpose(0, 1)  # T x B x C -> B x T x C
+            pooled_hidden_states[idx,:,:] = torch.mean(x, dim =1)
+            x = x.transpose(0, 1)  # B x T x C -> T x B x C
 
         if self.layer_norm:
             x = self.layer_norm(x)
@@ -387,8 +393,8 @@ class BartEncoder(nn.Module):
             encoder_states = encoder_states + (x,)
 
         if not return_dict:
-            return tuple(v for v in [x, encoder_states, all_attentions] if v is not None)
-        return BaseModelOutput(last_hidden_state=x, hidden_states=encoder_states, attentions=all_attentions)
+            return tuple(v for v in [pooled_hidden_states, encoder_states, all_attentions] if v is not None)
+        return BaseModelOutput(last_hidden_state=pooled_hidden_states, hidden_states=encoder_states, attentions=all_attentions)
 
 
 class GRUDecoderLayer(nn.Module):
@@ -420,6 +426,8 @@ class GRUDecoderLayer(nn.Module):
             h_0=hidden_states,
         )
         x = F.dropout(x, p=self.dropout, training=self.training)
+        new_hidden_states = F.dropout(new_hidden_states, p=self.dropout, training=self.training)
+
         
         # if layer_state is not None:  # reuse k,v and encoder_padding_mask
         #     saved_state = layer_state.get(self.cache_key, {})
@@ -537,13 +545,14 @@ class GRUDecoder(nn.Module):
         x = F.dropout(x, p=self.dropout, training=self.training)
 
 
-
-        # convert BART encoder hidden states to initial hidden states of GRU decoder
-        # num_layers+1 tuple of (BS, seq, dim) -> (decoder_layers, BS, dim), average over the length, dim =1
-        hidden_states = torch.zeros(len(self.layers), x.shape[0], self.d_model)
-        for idx in range(len(self.layers)):
-            # TODO: avoid to average over padding
-            hidden_states[idx,:,:] = torch.mean(encoder_hidden_states[idx+1], dim =1)
+        # fixed in BART encoder
+        # # convert BART encoder hidden states to initial hidden states of GRU decoder
+        # # num_layers+1 tuple of (BS, seq, dim) -> (decoder_layers, BS, dim), average over the length, dim =1
+        # pooled_hidden_states = torch.zeros(len(self.layers), x.shape[0], self.d_model)
+        # for idx in range(len(self.layers)):
+        #     # TODO: avoid to average over padding
+        #     pooled_hidden_states[idx,:,:] = torch.mean(encoder_hidden_states[idx+1], dim =1)
+        pooled_hiddend_states = encoder_hidden_states
 
         # Convert to Bart output format: (BS, seq_len, model_dim) ->  (seq_len, BS, model_dim)
         # GRU layers, also need this format: (seq_len, BS, model_dim)
@@ -579,7 +588,7 @@ class GRUDecoder(nn.Module):
             # )
 
             #// no cache version
-            x, hn = decoder_layer(x, hidden_states[idx].unsqueeze(0)) # input : (seq, BS, dim), (decoder_layer=1, BS, dim)
+            x, hn = decoder_layer(x, pooled_hiddend_states[idx].unsqueeze(0)) # input : (seq, BS, dim), (decoder_layer=1, BS, dim)
             new_hidden_states[idx,:,:] = hn.squeeze(0)
             # if use_cache:
             #     next_decoder_cache.append(layer_past.copy())
@@ -890,7 +899,7 @@ class BartModel(PretrainedBartModel):
                 input_ids=input_ids,
                 attention_mask=attention_mask,
                 output_attentions=output_attentions,
-                output_hidden_states=True,
+                output_hidden_states=output_hidden_states,
                 return_dict=return_dict,
             )
         # If the user passed a tuple for encoder_outputs, we wrap it in a BaseModelOutput when return_dict=False
@@ -900,11 +909,12 @@ class BartModel(PretrainedBartModel):
                 hidden_states=encoder_outputs[1] if len(encoder_outputs) > 1 else None,
                 attentions=encoder_outputs[2] if len(encoder_outputs) > 2 else None,
             )
-
+        logger.info(f"---------Song ----\n { encoder_outputs.keys()}")
+        print(f"---------Song ----\n { encoder_outputs.keys()}")
         # decoder outputs consists of (dec_features, layer_state, dec_hidden, dec_attn)
         decoder_outputs = self.decoder(
             decoder_input_ids,
-            encoder_outputs[1], 
+            encoder_outputs[0], 
             attention_mask,
             # decoder_padding_mask,
             # decoder_causal_mask=causal_mask,
