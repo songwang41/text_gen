@@ -393,17 +393,17 @@ class BartEncoder(nn.Module):
             encoder_states = encoder_states + (x,)
 
         if not return_dict:
-            return tuple(v for v in [pooled_hidden_states, encoder_states, all_attentions] if v is not None)
-        return BaseModelOutput(last_hidden_state=pooled_hidden_states, hidden_states=encoder_states, attentions=all_attentions)
+            return tuple(v for v in [pooled_hidden_states.to(dtype = x.dtype, device=x.device), encoder_states, all_attentions] if v is not None)
+        return BaseModelOutput(last_hidden_state=pooled_hidden_states.to(dtype = x.dtype, device=x.device), hidden_states=encoder_states, attentions=all_attentions)
 
 
 class GRUDecoderLayer(nn.Module):
 # class DecoderLayer(nn.Module):
     def __init__(self, config: BartConfig):
         super().__init__()
-        self.embed_dim = config.d_model
+        self.d_model = config.d_model
         self.dropout = config.dropout
-        self.gru = nn.GRU(self.embed_dim, self.embed_dim, num_layers=1, batch_first=False, dropout=config.decoder_layerdrop)
+        self.gru = nn.GRU(self.d_model, self.d_model, num_layers=1, batch_first=False, dropout=config.decoder_layerdrop)
 
     def forward(
         self,
@@ -414,11 +414,11 @@ class GRUDecoderLayer(nn.Module):
         #decoder_padding_mask=None,
         #use_attention=False,
     ):
-        residual = x
-        if layer_state is None:
-            layer_state = {}
-        if self.normalize_before:
-            x = self.self_attn_layer_norm(x)
+        # residual = x
+        # if layer_state is None:
+        #     layer_state = {}
+        # if self.normalize_before:
+        #     x = self.self_attn_layer_norm(x)
         # Self Attention
 
         x, new_hidden_states = self.gru(
