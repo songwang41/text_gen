@@ -363,7 +363,8 @@ class BartEncoder(nn.Module):
 
         encoder_states = () if output_hidden_states else None
         all_attentions = () if output_attentions else None
-        pooled_hidden_states = torch.zeros(len(self.layers), x.shape[0], self.d_model)
+        pooled_hidden_states = torch.zeros(len(self.layers), x.shape[1], self.d_model) # layers , BS, dim
+        print(f"----Song 367------{x.shape}, ---{x.device}------{pooled_hidden_states.shape}-------")
         for idx, encoder_layer in enumerate(self.layers):
             if output_hidden_states:
                 x = x.transpose(0, 1)  # T x B x C -> B x T x C
@@ -380,6 +381,7 @@ class BartEncoder(nn.Module):
                 all_attentions = all_attentions + (attn,)
             
             x = x.transpose(0, 1)  # T x B x C -> B x T x C
+            print(f"---x-- {x.shape}-----{x.device}--")
             pooled_hidden_states[idx,:,:] = torch.mean(x, dim =1)
             x = x.transpose(0, 1)  # B x T x C -> T x B x C
 
@@ -393,8 +395,8 @@ class BartEncoder(nn.Module):
             encoder_states = encoder_states + (x,)
 
         if not return_dict:
-            return tuple(v for v in [pooled_hidden_states.to(dtype = x.dtype, device=x.device), encoder_states, all_attentions] if v is not None)
-        return BaseModelOutput(last_hidden_state=pooled_hidden_states.to(dtype = x.dtype, device=x.device), hidden_states=encoder_states, attentions=all_attentions)
+            return tuple(v for v in [pooled_hidden_states.to(dtype = input_ids.dtype, device=input_ids.device), encoder_states, all_attentions] if v is not None)
+        return BaseModelOutput(last_hidden_state=pooled_hidden_states.to(dtype = input_ids.dtype, device=input_ids.device), hidden_states=encoder_states, attentions=all_attentions)
 
 
 class GRUDecoderLayer(nn.Module):
@@ -423,7 +425,7 @@ class GRUDecoderLayer(nn.Module):
 
         x, new_hidden_states = self.gru(
             input=x,
-            h_0=hidden_states,
+            hx = hidden_states,
         )
         x = F.dropout(x, p=self.dropout, training=self.training)
         new_hidden_states = F.dropout(new_hidden_states, p=self.dropout, training=self.training)
@@ -588,6 +590,7 @@ class GRUDecoder(nn.Module):
             # )
 
             #// no cache version
+            print(f"------Song ---{x.shape}, ---{pooled_hiddend_states.shape}-----")
             x, hn = decoder_layer(x, pooled_hiddend_states[idx].unsqueeze(0)) # input : (seq, BS, dim), (decoder_layer=1, BS, dim)
             new_hidden_states[idx,:,:] = hn.squeeze(0)
             # if use_cache:
@@ -870,6 +873,7 @@ class BartModel(PretrainedBartModel):
         return_dict=None,
     ):
 
+        print(f"-Song ---874 ------\n{input_ids}")
         if decoder_input_ids is None:
             use_cache = False
 
@@ -893,6 +897,7 @@ class BartModel(PretrainedBartModel):
             decoder_padding_mask, causal_mask = None, None
 
         assert decoder_input_ids is not None
+        print(f"------Song ---898--{decoder_input_ids}---------")
 
         if encoder_outputs is None:
             encoder_outputs = self.encoder(
@@ -910,7 +915,7 @@ class BartModel(PretrainedBartModel):
                 attentions=encoder_outputs[2] if len(encoder_outputs) > 2 else None,
             )
         logger.info(f"---------Song ----\n { encoder_outputs.keys()}")
-        print(f"---------Song ----\n { encoder_outputs.keys()}")
+        print(f"---------Song ----\n { encoder_outputs[0].shape}")
         # decoder outputs consists of (dec_features, layer_state, dec_hidden, dec_attn)
         decoder_outputs = self.decoder(
             decoder_input_ids,
