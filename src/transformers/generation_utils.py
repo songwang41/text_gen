@@ -452,6 +452,7 @@ class GenerationMixin:
         """
 
         # set init values
+        # print(f"generation_utils.py, line 454, input_ids:{input_ids}")
         num_beams = num_beams if num_beams is not None else self.config.num_beams
         max_length = max_length if max_length is not None else self.config.max_length
         do_sample = do_sample if do_sample is not None else self.config.do_sample
@@ -472,7 +473,7 @@ class GenerationMixin:
             model_kwargs["attention_mask"] = self._prepare_attention_mask_for_generation(
                 input_ids, pad_token_id, eos_token_id
             )
-
+        # print(f"------generation_utils.py, 488, input_ids: {input_ids}; mmodel_kwargs:\n{model_kwargs}")
         # special case if pad_token_id is not defined
         if pad_token_id is None and eos_token_id is not None:
             logger.warning(f"Setting `pad_token_id` to `eos_token_id`:{eos_token_id} for open-end generation.")
@@ -489,7 +490,9 @@ class GenerationMixin:
 
             if "encoder_outputs" not in model_kwargs or not isinstance(model_kwargs["encoder_outputs"], ModelOutput):
                 raise ValueError("Make sure that `model_kwargs` include `encoder_outputs` of type `ModelOutput`.")
-
+        # print(f"------generation_utils.py, 493, input_ids: {input_ids}; mmodel_kwargs:\n{model_kwargs}")
+        # print(model_kwargs['encoder_outputs'][0].shape, model_kwargs['encoder_outputs'][0].device)
+        
         # determine generation mode
         is_greedy_gen_mode = (num_beams == 1) and do_sample is False
         is_sample_gen_mode = (num_beams == 1) and do_sample is True
@@ -695,6 +698,7 @@ class GenerationMixin:
         )
 
         while cur_len < max_length:
+            # print(f"generation_utils, greedy_search, input_ids:{input_ids}\n model_kwargs: {model_kwargs}")
             # prepare model inputs
             model_inputs = self.prepare_inputs_for_generation(input_ids, **model_kwargs)
 
