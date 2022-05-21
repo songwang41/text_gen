@@ -410,6 +410,14 @@ class GRUDecoderLayer(nn.Module):
         self.dropout = config.dropout
         self.gru = nn.GRU(self.d_model, self.d_model, num_layers=1, batch_first=False, dropout=config.decoder_layerdrop)
 
+        self.activation_fn = ACT2FN[config.activation_function]
+        self.activation_dropout = config.activation_dropout
+        self.normalize_before = config.normalize_before
+        self.encoder_attn_layer_norm = LayerNorm(self.embed_dim)
+        self.fc1 = nn.Linear(self.embed_dim, config.decoder_ffn_dim)
+        self.fc2 = nn.Linear(config.decoder_ffn_dim, self.embed_dim)
+        self.final_layer_norm = LayerNorm(self.embed_dim)
+
     def forward(
         self,
         x,
@@ -419,20 +427,41 @@ class GRUDecoderLayer(nn.Module):
         #decoder_padding_mask=None,
         #use_attention=False,
     ):
-        # residual = x
+        residual = x
         # if layer_state is None:
         #     layer_state = {}
-        # if self.normalize_before:
-        #     x = self.self_attn_layer_norm(x)
+        if not self.normalize_before:
+            x = self.encoder_attn_layer_norm(x)
         # Self Attention
-
+        # x, self_attn_weights = self.self_attn(
+        #     query=x,
+        #     key=x,
+        #     layer_state=layer_state,  # adds keys to layer state
+        #     key_padding_mask=decoder_padding_mask,
+        #     attn_mask=causal_mask,
+        #     output_attentions=output_attentions,
+        # )
         x, new_hidden_states = self.gru(
             input=x,
             hx = hidden_states,
         )
         x = F.dropout(x, p=self.dropout, training=self.training)
         new_hidden_states = F.dropout(new_hidden_states, p=self.dropout, training=self.training)
+        x = residual + x
+        if not self.normalize_before:
+            x = self.encoder_attn_layer_norm(x)
 
+        # Fully Connected
+        residual = x
+        if self.normalize_before:
+            x = self.final_layer_norm(x)
+        x = self.activation_fn(self.fc1(x))
+        x = F.dropout(x, p=self.activation_dropout, training=self.training)
+        x = self.fc2(x)
+        x = F.dropout(x, p=self.dropout, training=self.training)
+        x = residual + x
+        if not self.normalize_before:
+            x = self.final_layer_norm(x)
         
         # if layer_state is not None:  # reuse k,v and encoder_padding_mask
         #     saved_state = layer_state.get(self.cache_key, {})
