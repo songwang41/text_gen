@@ -586,8 +586,12 @@ class GRUDecoder(nn.Module):
         # for idx in range(len(self.layers)):
         #     # TODO: avoid to average over padding
         #     pooled_hidden_states[idx,:,:] = torch.mean(encoder_hidden_states[idx+1], dim =1)
-        pooled_hiddend_states = encoder_hidden_states.transpose(0, 1)
-        # print(f"pooled_hiddend_states.dtype: {pooled_hiddend_states.dtype}")
+        pooled_hidden_states = encoder_hidden_states.transpose(0, 1)
+        if pooled_hidden_states.is_contiguous:
+            pooled_hidden_states = pooled_hidden_states.contiguous()
+        #    result = _VF.gru(input, hx, self._flat_weights, self.bias, self.num_layers,
+        # RuntimeError: rnn: hx is not contiguous
+        # print(f"pooled_hidden_states.dtype: {pooled_hidden_states.dtype}")
 
         # Convert to Bart output format: (BS, seq_len, model_dim) ->  (seq_len, BS, model_dim)
         # GRU layers, also need this format: (seq_len, BS, model_dim)
@@ -599,7 +603,7 @@ class GRUDecoder(nn.Module):
         all_output_states = () if output_hidden_states else None
         # all_cross_attentions = () if output_attentions else None
         # next_decoder_cache: List[Dict] = []
-        new_hidden_states = torch.zeros([len(self.layers), x.shape[1], self.d_model], dtype=pooled_hiddend_states.dtype)
+        new_hidden_states = torch.zeros([len(self.layers), x.shape[1], self.d_model], dtype=pooled_hidden_states.dtype)
         for idx, decoder_layer in enumerate(self.layers):
             # add LayerDrop (see https://arxiv.org/abs/1909.11556 for description)
             if output_hidden_states:
@@ -623,8 +627,8 @@ class GRUDecoder(nn.Module):
             # )
 
             #// no cache version
-            # print(f"------Song =-- 593 ---{x.shape}, --pooled_hiddend_states-{pooled_hiddend_states.shape}-----")
-            x, hn = decoder_layer(x, pooled_hiddend_states[idx].unsqueeze(0)) # input : (seq, BS, dim), (decoder_layer=1, BS, dim)
+            # print(f"------Song =-- 593 ---{x.shape}, --pooled_hidden_states-{pooled_hidden_states.shape}-----")
+            x, hn = decoder_layer(x, pooled_hidden_states[idx].unsqueeze(0)) # input : (seq, BS, dim), (decoder_layer=1, BS, dim)
             # print(f"new_hidden_states: {new_hidden_states.shape}; new_hidden_states[idx,:,:], {new_hidden_states[idx,:,:].shape}")
             new_hidden_states[idx,:,:] = hn.squeeze(0)
             # if use_cache:
