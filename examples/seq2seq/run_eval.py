@@ -103,7 +103,7 @@ def run_generate(verbose=True):
         "--n_obs", type=int, default=-1, required=False, help="How many observations. Defaults to all."
     )
     parser.add_argument("--fp16", action="store_true")
-    parser.add_argument("--keep_specical_tokens", type=str, default ='false')
+    parser.add_argument("--keep_special_tokens", type=str, default ='false', help="keep the special tokens during generation")
     parser.add_argument("--dump-args", action="store_true", help="print the custom hparams with the results")
     parser.add_argument(
         "--info",
@@ -114,6 +114,7 @@ def run_generate(verbose=True):
     )
     # Unspecified args like --num_beams=2 --decoder_start_token_id=4 are passed to model.generate
     args, rest = parser.parse_known_args()
+    
     parsed_args = parse_numeric_n_bool_cl_kwargs(rest)
     if parsed_args and verbose:
         print(f"parsed the following generate kwargs: {parsed_args}")
