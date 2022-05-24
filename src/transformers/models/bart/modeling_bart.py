@@ -441,6 +441,12 @@ class GRUDecoderLayer(nn.Module):
         #     attn_mask=causal_mask,
         #     output_attentions=output_attentions,
         # )
+        # if 'prev_gru_hidden' in layer_state:
+        #     x, new_hidden_states = self.gru(
+        #         input = x,
+        #         hx = hidden_states,
+        #     )
+        #     layer_state['prev_gru_hidden'] = new_hidden_states
         x, new_hidden_states = self.gru(
             input=x,
             hx = hidden_states,
@@ -564,9 +570,9 @@ class GRUDecoder(nn.Module):
         # embed positions
         positions = self.embed_positions(input_ids, use_cache=use_cache)
 
-        if use_cache:
-            input_ids = input_ids[:, -1:] # the last one
-            positions = positions[:, -1:] # the last one
+        # if use_cache:
+        #     input_ids = input_ids[:, -1:] # the last one
+        #     positions = positions[:, -1:] # the last one
 
         x = self.embed_tokens(input_ids) * self.embed_scale
         if self.do_blenderbot_90_layernorm:
