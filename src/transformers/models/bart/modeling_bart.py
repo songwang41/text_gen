@@ -663,7 +663,7 @@ class GRUDecoder(nn.Module):
         # next_cache = next_decoder_cache if use_cache else None
         if not return_dict:
             return tuple(
-                v for v in [x, new_hidden_states.transpose(0, 1), all_output_states] if v is not None
+                v for v in [x, new_hidden_states.transpose(0, 1).to(x.device), all_output_states] if v is not None
             )
         # return GRUDecoderOutput(
         #     last_hidden_state=x,
@@ -676,7 +676,7 @@ class GRUDecoder(nn.Module):
         
         return BaseModelOutputWithPastAndCrossAttentions(
             last_hidden_state=x,
-            past_key_values=new_hidden_states.transpose(0, 1), #BS, nlayers, dim
+            past_key_values=new_hidden_states.transpose(0, 1).to(x.device), #BS, nlayers, dim
             hidden_states=all_output_states,
             # attentions=all_self_attns,
             # cross_attentions=all_cross_attentions,
