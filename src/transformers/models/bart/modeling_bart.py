@@ -489,14 +489,16 @@ class GRUDecoder(nn.Module):
         self.layernorm_embedding = LayerNorm(self.d_model) if config.normalize_embedding else nn.Identity() #None
         self.layer_norm = LayerNorm(self.d_model) if config.add_final_layer_norm else None #None
 
+
+
     def forward(
         self,
-        input_ids,
+        input_ids, #decoder input
         encoder_hidden_states,
-        encoder_padding_mask,
+        # encoder_padding_mask,
         # decoder_padding_mask,
         # decoder_causal_mask,
-        # past_key_values=None,
+        past_key_values=None,
         use_cache=False,
         # output_attentions=False,
         # output_inputs=False,
@@ -525,11 +527,11 @@ class GRUDecoder(nn.Module):
                 - hidden states
                 - attentions
         """
-        use_cache=False
+        # use_cache=True
 
         # check attention mask and invert
-        if encoder_padding_mask is not None:
-            encoder_padding_mask = invert_mask(encoder_padding_mask)
+        # if encoder_padding_mask is not None:
+        #     encoder_padding_mask = invert_mask(encoder_padding_mask)
         # TODO, currently, this is not used in calculating the initial hidden states
 
         # embed positions
@@ -557,10 +559,15 @@ class GRUDecoder(nn.Module):
         # for idx in range(len(self.layers)):
         #     # TODO: avoid to average over padding
         #     pooled_hidden_states[idx,:,:] = torch.mean(encoder_hidden_states[idx+1], dim =1)
-        pooled_hidden_states = encoder_hidden_states.transpose(0, 1)
-        if pooled_hidden_states.is_contiguous:
-            pooled_hidden_states = pooled_hidden_states.contiguous()
-        # print(f"pooled_hidden_states.dtype: {pooled_hidden_states.dtype}")
+        if use_cache and not past_key_values is None:
+            prev_hidden_states = past_key_values.transpose(0, 1)
+        else:
+            prev_hidden_states = encoder_hidden_states.transpose(0, 1)
+        if prev_hidden_states.is_contiguous:
+            prev_hidden_states = prev_hidden_states.contiguous()
+        #    result = _VF.gru(input, hx, self._flat_weights, self.bias, self.num_layers,
+        # RuntimeError: rnn: hx is not contiguous
+        # print(f"prev_hidden_states.dtype: {prev_hidden_states.dtype}")
 
         # Convert to Bart output format: (BS, seq_len, model_dim) ->  (seq_len, BS, model_dim)
         # GRU layers, also need this format: (seq_len, BS, model_dim)
@@ -572,7 +579,7 @@ class GRUDecoder(nn.Module):
         all_output_states = () if output_hidden_states else None
         # all_cross_attentions = () if output_attentions else None
         # next_decoder_cache: List[Dict] = []
-        new_hidden_states = torch.zeros([len(self.layers), x.shape[1], self.d_model], dtype=pooled_hidden_states.dtype)
+        new_hidden_states = torch.zeros([len(self.layers), x.shape[1], self.d_model], dtype=prev_hidden_states.dtype)
         for idx, decoder_layer in enumerate(self.layers):
             # add LayerDrop (see https://arxiv.org/abs/1909.11556 for description)
             if output_hidden_states:
@@ -582,8 +589,10 @@ class GRUDecoder(nn.Module):
             dropout_probability = random.uniform(0, 1)
             if self.training and (dropout_probability < self.layerdrop):
                 continue
-
-            # layer_state = past_key_values[idx] if past_key_values is not None else None
+            
+            # cache version and   #// no cache version
+            # print(f"------Song =-- 593 ---{x.shape}, --prev_hidden_states-{prev_hidden_states.shape}-----")
+            x, hn = decoder_layer(x, prev_hidden_states[idx].unsqueeze(0)) # input : (seq, BS, dim), (decoder_layer=1, BS, dim)
 
             # x, layer_self_attn, layer_past, layer_cross_attn = decoder_layer(
             #     x,
@@ -595,9 +604,7 @@ class GRUDecoder(nn.Module):
             #     output_attentions=output_attentions,
             # )
 
-            #// no cache version
-            # print(f"------Song =-- 593 ---{x.shape}, --pooled_hidden_states-{pooled_hidden_states.shape}-----")
-            x, hn = decoder_layer(x, pooled_hidden_states[idx].unsqueeze(0)) # input : (seq, BS, dim), (decoder_layer=1, BS, dim)
+            
             # print(f"new_hidden_states: {new_hidden_states.shape}; new_hidden_states[idx,:,:], {new_hidden_states[idx,:,:].shape}")
             new_hidden_states[idx,:,:] = hn.squeeze(0)
             # if use_cache:
@@ -623,7 +630,7 @@ class GRUDecoder(nn.Module):
         # next_cache = next_decoder_cache if use_cache else None
         if not return_dict:
             return tuple(
-                v for v in [x, new_hidden_states, all_output_states] if v is not None
+                v for v in [x, new_hidden_states.transpose(0, 1).to(x.device), all_output_states] if v is not None
             )
         # return GRUDecoderOutput(
         #     last_hidden_state=x,
@@ -636,8 +643,8 @@ class GRUDecoder(nn.Module):
         
         return BaseModelOutputWithPastAndCrossAttentions(
             last_hidden_state=x,
-            # past_key_values=next_cache,
-            # hidden_states=all_hidden_states,
+            past_key_values=new_hidden_states.transpose(0, 1).to(x.device), #BS, nlayers, dim
+            hidden_states=all_output_states,
             # attentions=all_self_attns,
             # cross_attentions=all_cross_attentions,
         )   
