@@ -31,6 +31,7 @@ def generate_summaries_or_translations(
     fp16=False,
     task="summarization",
     prefix=None,
+    keep_special_tokens=False,
     **generate_kwargs,
 ) -> Dict:
     """Save model.generate results to <out_file>, and return how long it took."""
@@ -56,7 +57,7 @@ def generate_summaries_or_translations(
             attention_mask=batch.attention_mask,
             **generate_kwargs,
         )
-        dec = tokenizer.batch_decode(summaries, skip_special_tokens=True, clean_up_tokenization_spaces=False)
+        dec = tokenizer.batch_decode(summaries, skip_special_tokens=not keep_special_tokens, clean_up_tokenization_spaces=False)
         for hypothesis in dec:
             fout.write(hypothesis + "\n")
             fout.flush()
@@ -102,6 +103,7 @@ def run_generate(verbose=True):
         "--n_obs", type=int, default=-1, required=False, help="How many observations. Defaults to all."
     )
     parser.add_argument("--fp16", action="store_true")
+    parser.add_argument("--keep_specical_tokens", action="store_true")
     parser.add_argument("--dump-args", action="store_true", help="print the custom hparams with the results")
     parser.add_argument(
         "--info",
@@ -130,6 +132,7 @@ def run_generate(verbose=True):
         fp16=args.fp16,
         task=args.task,
         prefix=args.prefix,
+        keep_special_tokens=args.keep_special_tokens,
         **parsed_args,
     )
 
