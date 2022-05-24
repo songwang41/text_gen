@@ -560,7 +560,7 @@ class GRUDecoder(nn.Module):
                 - hidden states
                 - attentions
         """
-        use_cache=True
+        # use_cache=True
 
         # check attention mask and invert
         # if encoder_padding_mask is not None:
