@@ -560,7 +560,7 @@ class GRUDecoder(nn.Module):
                 - hidden states
                 - attentions
         """
-        use_cache=False
+        use_cache=True
 
         # check attention mask and invert
         # if encoder_padding_mask is not None:
@@ -592,8 +592,8 @@ class GRUDecoder(nn.Module):
         # for idx in range(len(self.layers)):
         #     # TODO: avoid to average over padding
         #     pooled_hidden_states[idx,:,:] = torch.mean(encoder_hidden_states[idx+1], dim =1)
-        if use_cache and past_key_values:
-            prev_hidden_states = past_key_values
+        if use_cache and not past_key_values is None:
+            prev_hidden_states = past_key_values.transpose(0, 1)
         else:
             prev_hidden_states = encoder_hidden_states.transpose(0, 1)
         if prev_hidden_states.is_contiguous:
