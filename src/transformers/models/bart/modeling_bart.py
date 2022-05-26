@@ -569,10 +569,15 @@ class GRUDecoder(nn.Module):
 
         # embed positions
         positions = self.embed_positions(input_ids, use_cache=use_cache)
+        # print("---------------Song --------")
+        # print(positions.shape)
 
         if use_cache:
             input_ids = input_ids[:, -1:] # the last one
             positions = positions[:, -1:] # the last one
+        
+        # print(input_ids.shape)
+        # print(positions.shape)
 
         x = self.embed_tokens(input_ids) * self.embed_scale
         if self.do_blenderbot_90_layernorm:
@@ -967,10 +972,10 @@ class BartModel(PretrainedBartModel):
         decoder_outputs = self.decoder(
             decoder_input_ids,
             encoder_outputs[0], 
-            #attention_mask,
+            # attention_mask,
             # decoder_padding_mask,
             # decoder_causal_mask=causal_mask,
-            past_key_values=past_key_values,
+            past_key_values,
             use_cache=use_cache,
             #output_attentions=output_attentions,
             output_hidden_states=output_hidden_states,
