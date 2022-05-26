@@ -567,7 +567,7 @@ class GRUDecoder(nn.Module):
             prev_hidden_states = prev_hidden_states.contiguous()
         #    result = _VF.gru(input, hx, self._flat_weights, self.bias, self.num_layers,
         # RuntimeError: rnn: hx is not contiguous
-        print(f"prev_hidden_states.shape: {prev_hidden_states.shape}")
+        # print(f"prev_hidden_states.shape: {prev_hidden_states.shape}")
 
         # Convert to Bart output format: (BS, seq_len, model_dim) ->  (seq_len, BS, model_dim)
         # GRU layers, also need this format: (seq_len, BS, model_dim)
