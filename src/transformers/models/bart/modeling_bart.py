@@ -567,7 +567,7 @@ class GRUDecoder(nn.Module):
             prev_hidden_states = prev_hidden_states.contiguous()
         #    result = _VF.gru(input, hx, self._flat_weights, self.bias, self.num_layers,
         # RuntimeError: rnn: hx is not contiguous
-        # print(f"prev_hidden_states.dtype: {prev_hidden_states.dtype}")
+        print(f"prev_hidden_states.shape: {prev_hidden_states.shape}")
 
         # Convert to Bart output format: (BS, seq_len, model_dim) ->  (seq_len, BS, model_dim)
         # GRU layers, also need this format: (seq_len, BS, model_dim)
@@ -934,10 +934,10 @@ class BartModel(PretrainedBartModel):
         decoder_outputs = self.decoder(
             decoder_input_ids,
             encoder_outputs[0], 
-            attention_mask,
+            # attention_mask,
             # decoder_padding_mask,
             # decoder_causal_mask=causal_mask,
-            # past_key_values=past_key_values,
+            past_key_values,
             use_cache=use_cache,
             #output_attentions=output_attentions,
             output_hidden_states=output_hidden_states,
@@ -950,7 +950,7 @@ class BartModel(PretrainedBartModel):
 
         return Seq2SeqModelOutput(
             last_hidden_state=decoder_outputs.last_hidden_state,
-            #past_key_values=decoder_outputs.past_key_values,
+            past_key_values=decoder_outputs.past_key_values,
             decoder_hidden_states=decoder_outputs.hidden_states,
             #decoder_attentions=decoder_outputs.attentions,
             #cross_attentions=decoder_outputs.cross_attentions,
