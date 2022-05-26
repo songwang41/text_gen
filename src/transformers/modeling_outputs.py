@@ -272,6 +272,32 @@ class Seq2SeqModelOutput(ModelOutput):
     encoder_hidden_states: Optional[Tuple[torch.FloatTensor]] = None
     encoder_attentions: Optional[Tuple[torch.FloatTensor]] = None
 
+@dataclass
+class GRUDecoderLMOutput(ModelOutput):
+    """
+    Base class for causal language model (or autoregressive) outputs.
+
+    Args:
+        loss (:obj:`torch.FloatTensor` of shape :obj:`(1,)`, `optional`, returned when :obj:`labels` is provided):
+            Language modeling loss (for next-token prediction).
+        logits (:obj:`torch.FloatTensor` of shape :obj:`(batch_size, sequence_length, config.vocab_size)`):
+            Prediction scores of the language modeling head (scores for each vocabulary token before SoftMax).
+        hidden_states (:obj:`tuple(torch.FloatTensor)`, `optional`, returned when ``output_hidden_states=True`` is passed or when ``config.output_hidden_states=True``):
+            Tuple of :obj:`torch.FloatTensor` (one for the output of the embeddings + one for the output of each layer)
+            of shape :obj:`(batch_size, sequence_length, hidden_size)`.
+
+            Hidden-states of the model at the output of each layer plus the initial embedding outputs.
+    """
+        #     last_hidden_state=x,
+        #     gru_hidden_states = new_hidden_states,
+        #     #past_key_values=next_cache,
+        #     hidden_states=all_output_states,
+        #     #attentions=all_self_attns,
+        #     #cross_attentions=all_cross_attentions,
+        # ) 
+    last_hidden_state: Optional[torch.FloatTensor]
+    gru_hidden_states: torch.FloatTensor
+    hidden_states: Optional[Tuple[torch.FloatTensor]] = None
 
 @dataclass
 class CausalLMOutput(ModelOutput):
