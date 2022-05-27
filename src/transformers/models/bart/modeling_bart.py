@@ -457,6 +457,13 @@ class LSTMDecoderLayer(nn.Module):
         self.d_model = config.d_model
         self.dropout = config.dropout
         self.lstm = nn.LSTM(self.d_model, self.d_model, num_layers=1, batch_first=False, dropout=config.decoder_layerdrop)
+        self.activation_fn = ACT2FN[config.activation_function]
+        self.activation_dropout = config.activation_dropout
+        self.normalize_before = config.normalize_before
+        self.encoder_attn_layer_norm = LayerNorm(self.d_model)
+        self.fc1 = nn.Linear(self.d_model, config.decoder_ffn_dim)
+        self.fc2 = nn.Linear(config.decoder_ffn_dim, self.d_model)
+        self.final_layer_norm = LayerNorm(self.d_model)
 
     def forward(
         self,
@@ -464,11 +471,11 @@ class LSTMDecoderLayer(nn.Module):
         hidden_states, # layers , BS, Dim
         hidden_cell,
     ):
-        # residual = x
+        residual = x
         # if layer_state is None:
         #     layer_state = {}
-        # if self.normalize_before:
-        #     x = self.self_attn_layer_norm(x)
+        if self.normalize_before:
+            x = self.self_attn_layer_norm(x)
         # Self Attention
 
         x, (new_hidden_states, new_hidden_cell) = self.lstm(
@@ -479,16 +486,21 @@ class LSTMDecoderLayer(nn.Module):
         new_hidden_cell = F.dropout(new_hidden_cell, p=self.dropout, training=self.training)
 
         
-        # if layer_state is not None:  # reuse k,v and encoder_padding_mask
-        #     saved_state = layer_state.get(self.cache_key, {})
-        #     if "prev_key" in saved_state and static_kv:
-        #         # previous time steps are cached - no need to recompute key and value if they are static
-        #         key = None
-        # else:
-        #     # this branch is hit by encoder
-        #     saved_state = None
+        x = residual + x
+        if not self.normalize_before:
+            x = self.encoder_attn_layer_norm(x)
 
-        # layer_state=layer_state,  # adds keys to layer state
+        # Fully Connected
+        residual = x
+        if self.normalize_before:
+            x = self.final_layer_norm(x)
+        x = self.activation_fn(self.fc1(x))
+        x = F.dropout(x, p=self.activation_dropout, training=self.training)
+        x = self.fc2(x)
+        x = F.dropout(x, p=self.dropout, training=self.training)
+        x = residual + x
+        if not self.normalize_before:
+            x = self.final_layer_norm(x)
         return (
             x,
             new_hidden_states,
