@@ -607,8 +607,9 @@ class GRUDecoder(nn.Module):
             prev_hidden_states = past_key_values.transpose(0, 1)
         else:
             prev_hidden_states = encoder_hidden_states.transpose(0, 1)
-            for i in range(prev_hidden_states.shape[0]):
-                prev_hidden_states[i] = prev_hidden_states[-1]
+            if False:
+                for i in range(prev_hidden_states.shape[0]):
+                    prev_hidden_states[i] = prev_hidden_states[-1]
         if prev_hidden_states.is_contiguous:
             prev_hidden_states = prev_hidden_states.contiguous()
         #    result = _VF.gru(input, hx, self._flat_weights, self.bias, self.num_layers,
