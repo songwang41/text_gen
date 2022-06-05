@@ -329,6 +329,8 @@ class BartEncoder(nn.Module):
         self.layernorm_embedding = LayerNorm(embed_dim) if config.normalize_embedding else nn.Identity()
         # mbart has one extra layer_norm
         self.layer_norm = LayerNorm(config.d_model) if config.add_final_layer_norm else None
+        # self.fc_pool_1 = nn.Linear(self.embed_dim, self.embed_dim * 2) # weighted of the last layer of hidden states (max_src_length)
+        self.pools = nn.ModuleList([nn.Linear(self.d_model * 2, self.d_model * 2) for _ in range(config.encoder_layers)]) # map corresponding encoder layer to initial decoder input states
 
     def forward(
         self, input_ids, attention_mask=None, output_attentions=False, output_hidden_states=False, return_dict=True
@@ -387,7 +389,8 @@ class BartEncoder(nn.Module):
             # processed_hidden_states[idx,:,:] = torch.mean(x, dim =1)
             mean_pool_hidden = torch.mean(x, dim =1)
             max_pool_hidden = torch.max(x, dim = 1).values
-            processed_hidden_states[idx,:,:] = torch.cat((mean_pool_hidden, max_pool_hidden), -1 ) # B x 2C
+            new_x = torch.cat((mean_pool_hidden, max_pool_hidden), -1 ) # 1 x B x 2C
+            processed_hidden_states[idx,:,:] = self.pools[idx](new_x) # 1 x B x 2C
             x = x.transpose(0, 1)  # B x T x C -> T x B x C
 
         if self.layer_norm:
