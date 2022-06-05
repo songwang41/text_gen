@@ -363,8 +363,9 @@ class BartEncoder(nn.Module):
 
         encoder_states = () if output_hidden_states else None
         all_attentions = () if output_attentions else None
-        pooled_hidden_states = torch.zeros([len(self.layers), x.shape[1], self.d_model], dtype=x.dtype) # layers , BS, dim
-        # print(f"----Song 367------{x.shape}, ---{x.device}------{pooled_hidden_states.shape}-------")
+        new_dim = self.d_model * 2
+        processed_hidden_states = torch.zeros([len(self.layers), x.shape[1], new_dim], dtype=x.dtype) # layers , BS, dim
+        # print(f"----Song 367------{x.shape}, ---{x.device}------{processed_hidden_states.shape}-------")
         for idx, encoder_layer in enumerate(self.layers):
             if output_hidden_states:
                 x = x.transpose(0, 1)  # T x B x C -> B x T x C
@@ -382,7 +383,11 @@ class BartEncoder(nn.Module):
             
             x = x.transpose(0, 1)  # T x B x C -> B x T x C
             # print(f"---layer:{idx}--x-- {x.shape}-----{x.device}--")
-            pooled_hidden_states[idx,:,:] = torch.mean(x, dim =1)
+            # GRU use single hidden state of config.d_model i.e. C
+            # processed_hidden_states[idx,:,:] = torch.mean(x, dim =1)
+            mean_pool_hidden = torch.mean(x, dim =1)
+            max_pool_hidden = torch.max(x, dim = 1).values
+            processed_hidden_states[idx,:,:] = torch.cat((mean_pool_hidden, max_pool_hidden), -1 ) # B x 2C
             x = x.transpose(0, 1)  # B x T x C -> T x B x C
 
         if self.layer_norm:
@@ -396,10 +401,10 @@ class BartEncoder(nn.Module):
         
         # n_layer, BS, dim ---> BS, n_layer, dim
         # this is required by https://github.com/songwang41/text_gen/blob/da0993bff76ce6e25eabcbb5a47b0ca43760eb71/src/transformers/generation_utils.py#L135
-        pooled_hidden_states = pooled_hidden_states.transpose(0, 1) 
+        processed_hidden_states = processed_hidden_states.transpose(0, 1)
         if not return_dict:
-            return tuple(v for v in [pooled_hidden_states.to(dtype = x.dtype, device=x.device), encoder_states, all_attentions] if v is not None)
-        return BaseModelOutput(last_hidden_state=pooled_hidden_states.to(dtype = x.dtype, device=x.device), hidden_states=encoder_states, attentions=all_attentions)
+            return tuple(v for v in [processed_hidden_states.to(dtype = x.dtype, device=x.device), encoder_states, all_attentions] if v is not None)
+        return BaseModelOutput(last_hidden_state=processed_hidden_states.to(dtype = x.dtype, device=x.device), hidden_states=encoder_states, attentions=all_attentions)
 
 
 class GRUDecoderLayer(nn.Module):
@@ -599,10 +604,10 @@ class GRUDecoder(nn.Module):
         # fixed in BART encoder
         # # convert BART encoder hidden states to initial hidden states of GRU decoder
         # # num_layers+1 tuple of (BS, seq, dim) -> (decoder_layers, BS, dim), average over the length, dim =1
-        # pooled_hidden_states = torch.zeros(len(self.layers), x.shape[0], self.d_model)
+        # processed_hidden_states = torch.zeros(len(self.layers), x.shape[0], self.d_model)
         # for idx in range(len(self.layers)):
         #     # TODO: avoid to average over padding
-        #     pooled_hidden_states[idx,:,:] = torch.mean(encoder_hidden_states[idx+1], dim =1)
+        #     processed_hidden_states[idx,:,:] = torch.mean(encoder_hidden_states[idx+1], dim =1)
         if use_cache and not past_key_values is None:
             prev_hidden_states = past_key_values.transpose(0, 1)
         else:
@@ -801,15 +806,15 @@ class LSTMDecoder(nn.Module):
         # fixed in BART encoder
         # # convert BART encoder hidden states to initial hidden states of GRU decoder
         # # num_layers+1 tuple of (BS, seq, dim) -> (decoder_layers, BS, dim), average over the length, dim =1
-        # pooled_hidden_states = torch.zeros(len(self.layers), x.shape[0], self.d_model)
+        # processed_hidden_states = torch.zeros(len(self.layers), x.shape[0], self.d_model)
         # for idx in range(len(self.layers)):
         #     # TODO: avoid to average over padding
-        #     pooled_hidden_states[idx,:,:] = torch.mean(encoder_hidden_states[idx+1], dim =1)
+        #     processed_hidden_states[idx,:,:] = torch.mean(encoder_hidden_states[idx+1], dim =1)
         if use_cache and not past_key_values is None:
             prev_hidden_states = past_key_values.transpose(0, 1)
         else:
             prev_hidden_states = encoder_hidden_states.transpose(0, 1)
-            prev_hidden_states = torch.cat((prev_hidden_states, prev_hidden_states), -1) #lstm needs two hidden states
+            # prev_hidden_states = torch.cat((prev_hidden_states, prev_hidden_states), -1) #lstm needs two hidden states
             # for i in range(prev_hidden_states.shape[0]):
             #     prev_hidden_states[i] = prev_hidden_states[-1]
         if prev_hidden_states.is_contiguous:
