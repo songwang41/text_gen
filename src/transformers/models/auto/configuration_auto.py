@@ -20,6 +20,7 @@ from collections import OrderedDict
 from ...configuration_utils import PretrainedConfig
 from ..albert.configuration_albert import ALBERT_PRETRAINED_CONFIG_ARCHIVE_MAP, AlbertConfig
 from ..bart.configuration_bart import BART_PRETRAINED_CONFIG_ARCHIVE_MAP, BartConfig
+from ..bart_rnn.configuration_bart_rnn import BARTRNN_PRETRAINED_CONFIG_ARCHIVE_MAP, BartRNNConfig
 from ..bert.configuration_bert import BERT_PRETRAINED_CONFIG_ARCHIVE_MAP, BertConfig
 from ..bert_generation.configuration_bert_generation import BertGenerationConfig
 from ..blenderbot.configuration_blenderbot import BLENDERBOT_PRETRAINED_CONFIG_ARCHIVE_MAP, BlenderbotConfig
@@ -114,6 +115,7 @@ CONFIG_MAPPING = OrderedDict(
         ("marian", MarianConfig),
         ("mbart", MBartConfig),
         ("bart", BartConfig),
+        ("bartrnn", BartRNNConfig),
         ("blenderbot", BlenderbotConfig),
         ("reformer", ReformerConfig),
         ("longformer", LongformerConfig),
@@ -157,6 +159,7 @@ MODEL_NAMES_MAPPING = OrderedDict(
         ("marian", "Marian"),
         ("mbart", "mBART"),
         ("bart", "BART"),
+        ("bartrnn", "BARTRNN"),
         ("reformer", "Reformer"),
         ("longformer", "Longformer"),
         ("roberta", "RoBERTa"),

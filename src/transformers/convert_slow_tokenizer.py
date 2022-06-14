@@ -587,6 +587,7 @@ class T5Converter(SpmConverter):
 SLOW_TO_FAST_CONVERTERS = {
     "AlbertTokenizer": AlbertConverter,
     "BartTokenizer": RobertaConverter,
+    "BartRNNTokenizer": RobertaConverter,
     "BarthezTokenizer": BarthezConverter,
     "BertTokenizer": BertConverter,
     "CamembertTokenizer": CamembertConverter,

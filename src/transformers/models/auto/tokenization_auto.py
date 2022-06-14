@@ -21,6 +21,7 @@ from ...configuration_utils import PretrainedConfig
 from ...file_utils import is_sentencepiece_available, is_tokenizers_available
 from ...utils import logging
 from ..bart.tokenization_bart import BartTokenizer
+from ..bart_rnn.tokenization_bart_rnn import BartRNNTokenizer
 from ..bert.tokenization_bert import BertTokenizer
 from ..bert_japanese.tokenization_bert_japanese import BertJapaneseTokenizer
 from ..bertweet.tokenization_bertweet import BertweetTokenizer
@@ -52,6 +53,7 @@ from .configuration_auto import (
     AlbertConfig,
     AutoConfig,
     BartConfig,
+    BartRNNConfig,
     BertConfig,
     BertGenerationConfig,
     BlenderbotConfig,
@@ -123,6 +125,7 @@ else:
 if is_tokenizers_available():
     from ..albert.tokenization_albert_fast import AlbertTokenizerFast
     from ..bart.tokenization_bart_fast import BartTokenizerFast
+    from ..bart_rnn.tokenization_bart_rnn_fast import BartRNNTokenizerFast
     from ..barthez.tokenization_barthez_fast import BarthezTokenizerFast
     from ..bert.tokenization_bert_fast import BertTokenizerFast
     from ..camembert.tokenization_camembert_fast import CamembertTokenizerFast
@@ -150,6 +153,7 @@ if is_tokenizers_available():
 else:
     AlbertTokenizerFast = None
     BartTokenizerFast = None
+    BartRNNTokenizerFast = None
     BarthezTokenizerFast = None
     BertTokenizerFast = None
     CamembertTokenizerFast = None
@@ -195,6 +199,7 @@ TOKENIZER_MAPPING = OrderedDict(
         (LongformerConfig, (LongformerTokenizer, LongformerTokenizerFast)),
         (BartConfig, (BarthezTokenizer, BarthezTokenizerFast)),
         (BartConfig, (BartTokenizer, BartTokenizerFast)),
+        (BartRNNConfig, (BartRNNTokenizer, BartRNNTokenizerFast)),
         (LongformerConfig, (LongformerTokenizer, LongformerTokenizerFast)),
         (RobertaConfig, (RobertaTokenizer, RobertaTokenizerFast)),
         (ReformerConfig, (ReformerTokenizer, ReformerTokenizerFast)),
