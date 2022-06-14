@@ -20,7 +20,7 @@ from ...utils import logging
 
 logger = logging.get_logger(__name__)
 
-BART_PRETRAINED_CONFIG_ARCHIVE_MAP = {
+BARTRNN_PRETRAINED_CONFIG_ARCHIVE_MAP = {
     "facebook/bart-base": "https://huggingface.co/facebook/bart-base/resolve/main/config.json",
     "facebook/bart-large": "https://huggingface.co/facebook/bart-large/resolve/main/config.json",
     "facebook/bart-large-mnli": "https://huggingface.co/facebook/bart-large-mnli/resolve/main/config.json",
@@ -111,7 +111,7 @@ class BartRNNConfig(PretrainedConfig):
         use_cache (:obj:`bool`, `optional`, defaults to :obj:`True`):
             Whether or not the model should return the last key/values attentions (not used by all models).
     """
-    model_type = "bart"
+    model_type = "bartrnn"
     keys_to_ignore_at_inference = ["past_key_values"]
 
     def __init__(
