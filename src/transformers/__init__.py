@@ -96,6 +96,7 @@ from .models.auto import (
     AutoTokenizer,
 )
 from .models.bart import BartConfig, BartTokenizer
+from .models.bart_rnn import BartRNNConfig, BartRNNTokenizer
 from .models.bert import (
     BERT_PRETRAINED_CONFIG_ARCHIVE_MAP,
     BasicTokenizer,
@@ -227,6 +228,7 @@ else:
 if is_tokenizers_available():
     from .models.albert import AlbertTokenizerFast
     from .models.bart import BartTokenizerFast
+    from .models.bart_rnn import BartRNNTokenizerFast
     from .models.barthez import BarthezTokenizerFast
     from .models.bert import BertTokenizerFast
     from .models.camembert import CamembertTokenizerFast
@@ -361,6 +363,14 @@ if is_torch_available():
         BartForSequenceClassification,
         BartModel,
         PretrainedBartModel,
+    )
+    from .models.bart_rnn import (
+        BARTRNN_PRETRAINED_MODEL_ARCHIVE_LIST,
+        BartRNNForConditionalGeneration,
+        BartRNNForQuestionAnswering,
+        BartRNNForSequenceClassification,
+        BartRNNModel,
+        PretrainedBartRNNModel,
     )
     from .models.bert import (
         BERT_PRETRAINED_MODEL_ARCHIVE_LIST,

@@ -43,16 +43,16 @@ from ...modeling_outputs import (
 )
 from ...modeling_utils import PreTrainedModel
 from ...utils import logging
-from .configuration_bart import BartConfig
+from .configuration_bart_rnn import BartRNNConfig
 
 
 logger = logging.get_logger(__name__)
 
-_CONFIG_FOR_DOC = "BartConfig"
+_CONFIG_FOR_DOC = "BartRNNConfig"
 _TOKENIZER_FOR_DOC = "BartTokenizer"
 
 
-BART_PRETRAINED_MODEL_ARCHIVE_LIST = [
+BARTRNN_PRETRAINED_MODEL_ARCHIVE_LIST = [
     "facebook/bart-base",
     "facebook/bart-large",
     "facebook/bart-large-mnli",
@@ -74,7 +74,7 @@ BART_START_DOCSTRING = r"""
     general usage and behavior.
 
     Parameters:
-        config (:class:`~transformers.BartConfig`): Model configuration class with all the parameters of the model.
+        config (:class:`~transformers.BartRNNConfig`): Model configuration class with all the parameters of the model.
             Initializing with a config file does not load the weights associated with the model, only the
             configuration. Check out the :meth:`~transformers.PreTrainedModel.from_pretrained` method to load the model
             weights.
@@ -84,10 +84,10 @@ BART_START_DOCSTRING = r"""
 BART_GENERATION_EXAMPLE = r"""
     Summarization example::
 
-        >>> from transformers import BartTokenizer, BartForConditionalGeneration, BartConfig
+        >>> from transformers import BartTokenizer, BartRNNForConditionalGeneration, BartRNNConfig
 
         >>> # see ``examples/summarization/bart/run_eval.py`` for a longer example
-        >>> model = BartForConditionalGeneration.from_pretrained('facebook/bart-large-cnn')
+        >>> model = BartRNNForConditionalGeneration.from_pretrained('facebook/bart-large-cnn')
         >>> tokenizer = BartTokenizer.from_pretrained('facebook/bart-large-cnn')
 
         >>> ARTICLE_TO_SUMMARIZE = "My friends are cool but they eat too many carbs."
@@ -184,8 +184,8 @@ def _prepare_bart_decoder_inputs(
     return decoder_input_ids, decoder_padding_mask, causal_mask
 
 
-class PretrainedBartModel(PreTrainedModel):
-    config_class = BartConfig
+class PretrainedBartRNNModel(PreTrainedModel):
+    config_class = BartRNNConfig
     base_model_prefix = "model"
 
     def _init_weights(self, module):
@@ -240,7 +240,7 @@ def make_padding_mask(input_ids, padding_idx=1):
 
 
 class EncoderLayer(nn.Module):
-    def __init__(self, config: BartConfig):
+    def __init__(self, config: BartRNNConfig):
         super().__init__()
         self.embed_dim = config.d_model
         self.self_attn = Attention(self.embed_dim, config.encoder_attention_heads, dropout=config.attention_dropout)
@@ -298,10 +298,10 @@ class BartEncoder(nn.Module):
     :class:`EncoderLayer`.
 
     Args:
-        config: BartConfig
+        config: BartRNNConfig
     """
 
-    def __init__(self, config: BartConfig, embed_tokens):
+    def __init__(self, config: BartRNNConfig, embed_tokens):
         super().__init__()
 
         self.dropout = config.dropout
@@ -412,7 +412,7 @@ class BartEncoder(nn.Module):
 
 class GRUDecoderLayer(nn.Module):
 # class DecoderLayer(nn.Module):
-    def __init__(self, config: BartConfig):
+    def __init__(self, config: BartRNNConfig):
         super().__init__()
         self.d_model = config.d_model
         self.dropout = config.dropout
@@ -460,7 +460,7 @@ class GRUDecoderLayer(nn.Module):
 
 class LSTMDecoderLayer(nn.Module):
 # class DecoderLayer(nn.Module):
-    def __init__(self, config: BartConfig):
+    def __init__(self, config: BartRNNConfig):
         super().__init__()
         self.d_model = config.d_model
         self.dropout = config.dropout
@@ -519,10 +519,10 @@ class GRUDecoder(nn.Module):
     Transformer decoder consisting of *config.decoder_layers* layers. Each layer is a :class:`DecoderLayer`
 
     Args:
-        config: BartConfig
+        config: BartRNNConfig
         embed_tokens (torch.nn.Embedding): output embedding
     """
-    def __init__(self, config: BartConfig, embed_tokens: nn.Embedding):
+    def __init__(self, config: BartRNNConfig, embed_tokens: nn.Embedding):
         super().__init__()
         self.d_model = config.d_model
         self.dropout = config.dropout
@@ -721,10 +721,10 @@ class LSTMDecoder(nn.Module):
     Transformer decoder consisting of *config.decoder_layers* layers. Each layer is a :class:`DecoderLayer`
 
     Args:
-        config: BartConfig
+        config: BartRNNConfig
         embed_tokens (torch.nn.Embedding): output embedding
     """
-    def __init__(self, config: BartConfig, embed_tokens: nn.Embedding):
+    def __init__(self, config: BartRNNConfig, embed_tokens: nn.Embedding):
         super().__init__()
         self.d_model = config.d_model
         self.dropout = config.dropout
@@ -1124,8 +1124,8 @@ def _get_shape(t):
     "The bare BART Model outputting raw hidden-states without any specific head on top.",
     BART_START_DOCSTRING,
 )
-class BartModel(PretrainedBartModel):
-    def __init__(self, config: BartConfig):
+class BartRNNModel(PretrainedBartRNNModel):
+    def __init__(self, config: BartRNNConfig):
         super().__init__(config)
 
         padding_idx, vocab_size = config.pad_token_id, config.vocab_size
@@ -1246,13 +1246,13 @@ class BartModel(PretrainedBartModel):
 @add_start_docstrings(
     "The BART Model with a language modeling head. Can be used for summarization.", BART_START_DOCSTRING
 )
-class BartForConditionalGeneration(PretrainedBartModel):
+class BartRNNForConditionalGeneration(PretrainedBartRNNModel):
     base_model_prefix = "model"
     _keys_to_ignore_on_load_missing = [r"final_logits_bias", r"encoder\.version", r"decoder\.version"]
 
-    def __init__(self, config: BartConfig):
+    def __init__(self, config: BartRNNConfig):
         super().__init__(config)
-        base_model = BartModel(config)
+        base_model = BartRNNModel(config)
         self.model = base_model
         self.register_buffer("final_logits_bias", torch.zeros((1, self.model.shared.num_embeddings)))
 
@@ -1299,11 +1299,11 @@ class BartForConditionalGeneration(PretrainedBartModel):
         Conditional generation example::
 
             >>> # Mask filling only works for bart-large
-            >>> from transformers import BartTokenizer, BartForConditionalGeneration
+            >>> from transformers import BartTokenizer, BartRNNForConditionalGeneration
             >>> tokenizer = BartTokenizer.from_pretrained('facebook/bart-large')
             >>> TXT = "My friends are <mask> but they eat too many carbs."
 
-            >>> model = BartForConditionalGeneration.from_pretrained('facebook/bart-large')
+            >>> model = BartRNNForConditionalGeneration.from_pretrained('facebook/bart-large')
             >>> input_ids = tokenizer([TXT], return_tensors='pt')['input_ids']
             >>> logits = model(input_ids).logits
 
@@ -1409,10 +1409,10 @@ class BartForConditionalGeneration(PretrainedBartModel):
     """,
     BART_START_DOCSTRING,
 )
-class BartForSequenceClassification(PretrainedBartModel):
-    def __init__(self, config: BartConfig, **kwargs):
+class BartRNNForSequenceClassification(PretrainedBartRNNModel):
+    def __init__(self, config: BartRNNConfig, **kwargs):
         super().__init__(config, **kwargs)
-        self.model = BartModel(config)
+        self.model = BartRNNModel(config)
         self.classification_head = BartClassificationHead(
             config.d_model,
             config.d_model,
@@ -1498,14 +1498,14 @@ class BartForSequenceClassification(PretrainedBartModel):
     """,
     BART_START_DOCSTRING,
 )
-class BartForQuestionAnswering(PretrainedBartModel):
+class BartRNNForQuestionAnswering(PretrainedBartRNNModel):
     def __init__(self, config):
         super().__init__(config)
 
         config.num_labels = 2
         self.num_labels = config.num_labels
 
-        self.model = BartModel(config)
+        self.model = BartRNNModel(config)
         self.qa_outputs = nn.Linear(config.hidden_size, config.num_labels)
 
         self.model._init_weights(self.qa_outputs)

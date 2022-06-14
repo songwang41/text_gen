@@ -31,7 +31,7 @@ BART_PRETRAINED_CONFIG_ARCHIVE_MAP = {
 }
 
 
-class BartConfig(PretrainedConfig):
+class BartRNNConfig(PretrainedConfig):
     r"""
     This is the configuration class to store the configuration of a :class:`~transformers.BartModel`. It is used to
     instantiate a BART model according to the specified arguments, defining the model architecture.
@@ -151,13 +151,13 @@ class BartConfig(PretrainedConfig):
         **common_kwargs
     ):
         r"""
-        :class:`~transformers.BartConfig` is the configuration class for `BartModel`.
+        :class:`~transformers.BartRNNConfig` is the configuration class for `BartModel`.
 
         Examples::
 
-            >>> from transformers import BartConfig, BartModel
+            >>> from transformers import BartRNNConfig, BartModel
 
-            >>> config = BartConfig.from_pretrained('facebook/bart-large')
+            >>> config = BartRNNConfig.from_pretrained('facebook/bart-large')
             >>> model = BartModel(config)
 
         """

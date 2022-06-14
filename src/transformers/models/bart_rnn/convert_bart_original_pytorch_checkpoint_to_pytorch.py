@@ -24,18 +24,18 @@ import torch
 from packaging import version
 
 from transformers import (
-    BartConfig,
-    BartForConditionalGeneration,
-    BartForSequenceClassification,
-    BartModel,
-    BartTokenizer,
+    BartRNNConfig,
+    BartRNNForConditionalGeneration,
+    BartRNNForSequenceClassification,
+    BartRNNModel,
+    BartRNNTokenizer,
 )
 from transformers.models.bart.modeling_bart import _make_linear_from_emb
 from transformers.utils import logging
 
 
 FAIRSEQ_MODELS = ["bart.large", "bart.large.mnli", "bart.large.cnn", "bart_xsum/model.pt"]
-extra_arch = {"bart.large": BartModel, "bart.large.mnli": BartForSequenceClassification}
+extra_arch = {"bart.large": BartRNNModel, "bart.large.mnli": BartRNNForSequenceClassification}
 if version.parse(fairseq.__version__) < version.parse("0.9.0"):
     raise Exception("requires fairseq >= 0.9.0")
 
@@ -91,9 +91,9 @@ def convert_bart_checkpoint(checkpoint_path, pytorch_dump_folder_path, hf_checkp
     bart.model.upgrade_state_dict(bart.model.state_dict())
     if hf_checkpoint_name is None:
         hf_checkpoint_name = checkpoint_path.replace(".", "-")
-    config = BartConfig.from_pretrained(hf_checkpoint_name)
+    config = BartRNNConfig.from_pretrained(hf_checkpoint_name)
     tokens = bart.encode(SAMPLE_TEXT).unsqueeze(0)
-    tokens2 = BartTokenizer.from_pretrained(hf_checkpoint_name).encode(SAMPLE_TEXT, return_tensors="pt").unsqueeze(0)
+    tokens2 = BartRNNTokenizer.from_pretrained(hf_checkpoint_name).encode(SAMPLE_TEXT, return_tensors="pt").unsqueeze(0)
     assert torch.eq(tokens, tokens2).all()
 
     if checkpoint_path == "bart.large.mnli":
@@ -102,7 +102,7 @@ def convert_bart_checkpoint(checkpoint_path, pytorch_dump_folder_path, hf_checkp
         state_dict["model.shared.weight"] = state_dict["model.decoder.embed_tokens.weight"]
         for src, dest in mnli_rename_keys:
             rename_key(state_dict, src, dest)
-        model = BartForSequenceClassification(config).eval()
+        model = BartRNNForSequenceClassification(config).eval()
         model.load_state_dict(state_dict)
         fairseq_output = bart.predict("mnli", tokens, return_logits=True)
         new_model_outputs = model(tokens)[0]  # logits
@@ -112,11 +112,11 @@ def convert_bart_checkpoint(checkpoint_path, pytorch_dump_folder_path, hf_checkp
         state_dict["shared.weight"] = state_dict["decoder.embed_tokens.weight"]
         fairseq_output = bart.extract_features(tokens)
         if hf_checkpoint_name == "facebook/bart-large":
-            model = BartModel(config).eval()
+            model = BartRNNModel(config).eval()
             model.load_state_dict(state_dict)
             new_model_outputs = model(tokens).model[0]
         else:
-            model = BartForConditionalGeneration(config).eval()  # an existing summarization ckpt
+            model = BartRNNForConditionalGeneration(config).eval()  # an existing summarization ckpt
             model.model.load_state_dict(state_dict)
             if hasattr(model, "lm_head"):
                 model.lm_head = _make_linear_from_emb(model.model.shared)

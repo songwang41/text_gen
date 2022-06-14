@@ -170,7 +170,7 @@ def invert_mask(attention_mask: tf.Tensor):
     return ret
 
 
-class TFPretrainedBartModel(TFPreTrainedModel):
+class TFPretrainedBartRNNModel(TFPreTrainedModel):
     config_class = BartConfig
     base_model_prefix = "model"
 
@@ -875,7 +875,7 @@ class TFSinusoidalPositionalEmbedding(tf.keras.layers.Embedding):
     BART_START_DOCSTRING,
 )
 @keras_serializable
-class TFBartModel(TFPretrainedBartModel):
+class TFBartRNNModel(TFPretrainedBartRNNModel):
     def __init__(self, config: BartConfig, *inputs, **kwargs):
         super().__init__(config, *inputs, **kwargs)
         self.shared = TFSharedEmbeddings(config.vocab_size, config.d_model, config.pad_token_id, name="model.shared")
@@ -1032,7 +1032,7 @@ class TFBartModel(TFPretrainedBartModel):
     "The BART Model with a language modeling head. Can be used for summarization.",
     BART_START_DOCSTRING,
 )
-class TFBartForConditionalGeneration(TFPretrainedBartModel):
+class TFBartForConditionalGeneration(TFPretrainedBartRNNModel):
     base_model_prefix = "model"
     _keys_to_ignore_on_load_missing = [
         r"final_logits_bias",
@@ -1044,7 +1044,7 @@ class TFBartForConditionalGeneration(TFPretrainedBartModel):
 
     def __init__(self, config, *inputs, **kwargs):
         super().__init__(config, *inputs, **kwargs)
-        self.model = TFBartModel(config, name="model")
+        self.model = TFBartRNNModel(config, name="model")
         self.use_cache = config.use_cache
         # final_bias_logits is registered as a buffer in pytorch, so not trainable for the the sake of consistency.
         self.final_logits_bias = self.add_weight(

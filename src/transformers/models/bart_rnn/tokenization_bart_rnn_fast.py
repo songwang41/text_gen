@@ -19,7 +19,8 @@ from transformers import add_start_docstrings
 
 from ...tokenization_utils_base import PREPARE_SEQ2SEQ_BATCH_DOCSTRING, BatchEncoding
 from ...utils import logging
-from ..roberta.tokenization_roberta import RobertaTokenizer
+from ..roberta.tokenization_roberta_fast import RobertaTokenizerFast
+from .tokenization_bart_rnn import BartRNNTokenizer
 
 
 logger = logging.get_logger(__name__)
@@ -28,33 +29,27 @@ logger = logging.get_logger(__name__)
 # vocab and merges same as roberta
 vocab_url = "https://huggingface.co/roberta-large/resolve/main/vocab.json"
 merges_url = "https://huggingface.co/roberta-large/resolve/main/merges.txt"
-_all_bart_models = [
-    "facebook/bart-base",
-    "facebook/bart-large",
-    "facebook/bart-large-mnli",
-    "facebook/bart-large-cnn",
-    "facebook/bart-large-xsum",
-    "yjernite/bart_eli5",
-    # This is not exhaustive: see https://huggingface.co/models?filter=bart
+tokenizer_url = "https://huggingface.co/roberta-large/resolve/main/tokenizer.json"
+_all_BartRNN_models = [
+    "facebook/BartRNN-base",
+    "facebook/BartRNN-large",
+    "facebook/BartRNN-large-mnli",
+    "facebook/BartRNN-large-cnn",
+    "facebook/BartRNN-large-xsum",
+    "yjernite/BartRNN_eli5",
+    # This is not exhaustive: see https://huggingface.co/models?filter=BartRNN
 ]
 
 
-class BartTokenizer(RobertaTokenizer):
-    r"""
-    Construct a BART tokenizer.
-
-    :class:`~transformers.BartTokenizer` is identical to :class:`~transformers.RobertaTokenizer` and adds a new
-    :meth:`~transformers.BartTokenizer.prepare_seq2seq_batch`
-
-    Refer to superclass :class:`~transformers.RobertaTokenizer` for usage examples and documentation concerning the
-    initialization parameters and other methods.
-    """
+class BartRNNTokenizerFast(RobertaTokenizerFast):
     # merges and vocab same as Roberta
-    max_model_input_sizes = {m: 1024 for m in _all_bart_models}
+    max_model_input_sizes = {m: 1024 for m in _all_BartRNN_models}
     pretrained_vocab_files_map = {
-        "vocab_file": {m: vocab_url for m in _all_bart_models},
-        "merges_file": {m: merges_url for m in _all_bart_models},
+        "vocab_file": {m: vocab_url for m in _all_BartRNN_models},
+        "merges_file": {m: merges_url for m in _all_BartRNN_models},
+        "tokenizer_file": {m: tokenizer_url for m in _all_BartRNN_models},
     }
+    slow_tokenizer_class = BartRNNTokenizer
 
     @add_start_docstrings(PREPARE_SEQ2SEQ_BATCH_DOCSTRING)
     def prepare_seq2seq_batch(
@@ -64,12 +59,10 @@ class BartTokenizer(RobertaTokenizer):
         max_length: Optional[int] = None,
         max_target_length: Optional[int] = None,
         padding: str = "longest",
-        return_tensors: str = None,
+        return_tensors: Optional[str] = None,
         truncation=True,
         **kwargs,
     ) -> BatchEncoding:
-        kwargs.pop("src_lang", None)
-        kwargs.pop("tgt_lang", None)
         if max_length is None:
             max_length = self.model_max_length
         model_inputs: BatchEncoding = self(

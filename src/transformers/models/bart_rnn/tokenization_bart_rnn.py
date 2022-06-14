@@ -19,8 +19,7 @@ from transformers import add_start_docstrings
 
 from ...tokenization_utils_base import PREPARE_SEQ2SEQ_BATCH_DOCSTRING, BatchEncoding
 from ...utils import logging
-from ..roberta.tokenization_roberta_fast import RobertaTokenizerFast
-from .tokenization_bart import BartTokenizer
+from ..roberta.tokenization_roberta import RobertaTokenizer
 
 
 logger = logging.get_logger(__name__)
@@ -29,7 +28,6 @@ logger = logging.get_logger(__name__)
 # vocab and merges same as roberta
 vocab_url = "https://huggingface.co/roberta-large/resolve/main/vocab.json"
 merges_url = "https://huggingface.co/roberta-large/resolve/main/merges.txt"
-tokenizer_url = "https://huggingface.co/roberta-large/resolve/main/tokenizer.json"
 _all_bart_models = [
     "facebook/bart-base",
     "facebook/bart-large",
@@ -41,15 +39,22 @@ _all_bart_models = [
 ]
 
 
-class BartTokenizerFast(RobertaTokenizerFast):
+class BartRNNTokenizer(RobertaTokenizer):
+    r"""
+    Construct a BART tokenizer.
+
+    :class:`~transformers.BartRNNTokenizer` is identical to :class:`~transformers.RobertaTokenizer` and adds a new
+    :meth:`~transformers.BartRNNTokenizer.prepare_seq2seq_batch`
+
+    Refer to superclass :class:`~transformers.RobertaTokenizer` for usage examples and documentation concerning the
+    initialization parameters and other methods.
+    """
     # merges and vocab same as Roberta
     max_model_input_sizes = {m: 1024 for m in _all_bart_models}
     pretrained_vocab_files_map = {
         "vocab_file": {m: vocab_url for m in _all_bart_models},
         "merges_file": {m: merges_url for m in _all_bart_models},
-        "tokenizer_file": {m: tokenizer_url for m in _all_bart_models},
     }
-    slow_tokenizer_class = BartTokenizer
 
     @add_start_docstrings(PREPARE_SEQ2SEQ_BATCH_DOCSTRING)
     def prepare_seq2seq_batch(
@@ -59,10 +64,12 @@ class BartTokenizerFast(RobertaTokenizerFast):
         max_length: Optional[int] = None,
         max_target_length: Optional[int] = None,
         padding: str = "longest",
-        return_tensors: Optional[str] = None,
+        return_tensors: str = None,
         truncation=True,
         **kwargs,
     ) -> BatchEncoding:
+        kwargs.pop("src_lang", None)
+        kwargs.pop("tgt_lang", None)
         if max_length is None:
             max_length = self.model_max_length
         model_inputs: BatchEncoding = self(
