@@ -462,6 +462,9 @@ class LSTMDecoderLayer(nn.Module):
         self.d_model = config.d_model
         self.dropout = config.dropout
         self.lstm = nn.LSTM(self.d_model, self.d_model, num_layers=1, batch_first=False, dropout=config.decoder_layerdrop)
+        self.normalize_before = config.normalize_before
+        self.encoder_attn_layer_norm = LayerNorm(self.d_model)
+        self.final_layer_norm = LayerNorm(self.d_model)
 
     def forward(
         self,
@@ -469,7 +472,7 @@ class LSTMDecoderLayer(nn.Module):
         hidden_states, # layers , BS, Dim
         hidden_cell,
     ):
-        # residual = x
+        residual = x
         # if layer_state is None:
         #     layer_state = {}
         # if self.normalize_before:
@@ -483,6 +486,13 @@ class LSTMDecoderLayer(nn.Module):
         new_hidden_states = F.dropout(new_hidden_states, p=self.dropout, training=self.training)
         new_hidden_cell = F.dropout(new_hidden_cell, p=self.dropout, training=self.training)
 
+        x = residual + x
+        if not self.normalize_before:
+            x = self.encoder_attn_layer_norm(x)
+
+        # residual = x
+        if self.normalize_before:
+            x = self.final_layer_norm(x)
         
         # if layer_state is not None:  # reuse k,v and encoder_padding_mask
         #     saved_state = layer_state.get(self.cache_key, {})
