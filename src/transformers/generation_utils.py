@@ -315,6 +315,7 @@ class GenerationMixin:
         decoder_start_token_id: Optional[int] = None,
         use_cache: Optional[bool] = None,
         prefix_allowed_tokens_fn: Optional[Callable[[int, torch.Tensor], List[int]]] = None,
+        return_score: Optional[bool] = False,
         **model_kwargs
     ) -> torch.LongTensor:
         r"""
@@ -580,6 +581,7 @@ class GenerationMixin:
                 max_length=max_length,
                 pad_token_id=pad_token_id,
                 eos_token_id=eos_token_id,
+                return_score=return_score,
                 **model_kwargs,
             )
 
@@ -875,6 +877,7 @@ class GenerationMixin:
         max_length: Optional[int] = None,
         pad_token_id: Optional[int] = None,
         eos_token_id: Optional[int] = None,
+        return_score: Optional[bool] = False, 
         **model_kwargs
     ):
         r"""
@@ -995,10 +998,10 @@ class GenerationMixin:
 
             next_token_scores, next_tokens = torch.topk(
                 next_token_scores, 2 * num_beams, dim=1, largest=True, sorted=True
-            )
+            ) # values, indices
 
-            next_indices = next_tokens // vocab_size
-            next_tokens = next_tokens % vocab_size
+            next_indices = next_tokens // vocab_size # beam indices
+            next_tokens = next_tokens % vocab_size # indices in vocab e.g. token ids
 
             # stateless
             beam_outputs = beam_scorer.process(
@@ -1026,8 +1029,8 @@ class GenerationMixin:
                 break
 
         decoded = beam_scorer.finalize(
-            input_ids, beam_scores, next_tokens, next_indices, pad_token_id=pad_token_id, eos_token_id=eos_token_id
-        )
+            input_ids, beam_scores, next_tokens, next_indices, pad_token_id=pad_token_id, eos_token_id=eos_token_id, return_score = return_score
+        ) #decoded = (decoded_tokens, decoded_scores)
 
         return decoded
 
