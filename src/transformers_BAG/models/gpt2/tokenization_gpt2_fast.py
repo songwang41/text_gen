@@ -18,7 +18,7 @@
 import json
 from typing import Optional, Tuple
 
-from tokenizers import pre_tokenizers
+from tokenizers_HF import pre_tokenizers
 
 from ...tokenization_utils_base import BatchEncoding
 from ...tokenization_utils_fast import PreTrainedTokenizerFast

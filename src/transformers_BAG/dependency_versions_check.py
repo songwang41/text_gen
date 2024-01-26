@@ -10,13 +10,13 @@ from .utils.versions import require_version_core
 # order specific notes:
 # - tqdm must be checked before tokenizers
 
-pkgs_to_check_at_runtime = "python tqdm regex sacremoses requests packaging filelock numpy tokenizers".split()
+pkgs_to_check_at_runtime = "python tqdm regex sacremoses requests packaging filelock numpy tokenizers_HF".split()
 if sys.version_info < (3, 7):
     pkgs_to_check_at_runtime.append("dataclasses")
 
 for pkg in pkgs_to_check_at_runtime:
     if pkg in deps:
-        if pkg == "tokenizers":
+        if pkg == "tokenizers_HF":
             # must be loaded here, or else tqdm check may fail
             from .file_utils import is_tokenizers_available
 

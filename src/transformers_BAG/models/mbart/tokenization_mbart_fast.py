@@ -15,7 +15,7 @@
 
 from typing import List, Optional
 
-from tokenizers import processors
+from tokenizers_HF import processors
 
 from ...file_utils import add_start_docstrings, is_sentencepiece_available
 from ...tokenization_utils import BatchEncoding

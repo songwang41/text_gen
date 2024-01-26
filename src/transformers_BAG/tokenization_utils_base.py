@@ -63,8 +63,8 @@ def _is_jax(x):
 
 
 if is_tokenizers_available():
-    from tokenizers import AddedToken
-    from tokenizers import Encoding as EncodingFast
+    from tokenizers_HF import AddedToken
+    from tokenizers_HF import Encoding as EncodingFast
 else:
 
     @dataclass(frozen=True, eq=True)
